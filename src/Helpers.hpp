@@ -19,33 +19,33 @@
  * SOFTWARE.
  */
 
-#include <fstream>
-#include <iostream>
+#ifndef HELPERS_HPP
+#define HELPERS_HPP
 
 #include "Molecule.hpp"
-#include "OneElectronIntegrals.hpp"
 
-int main(int argc, char** argv) {
-    if (argc < 3) {
-        std::cerr << "Usage: fastboys <input.xyz> <basisset.json>\n";
-        return 1;
-    }
+#include <Eigen/Dense>
 
-    std::ifstream input(argv[1]);
-    if (!input.is_open()) {
-        std::cerr << "Could not open file: " << argv[1] << '\n';
-        return 2;
-    }
+namespace helpers {
 
-    Molecule m(input);
-
-    std::ifstream basis(argv[2]);
-    if (!basis.is_open()) {
-        std::cerr << "Could not open file: " << argv[2] << '\n';
-        return 2;
-    }
-    auto b = m.construct_basis_set(basis);
-    auto s = overlap(b);
-    std::cout << s << '\n';
-    return 0;
+inline bool is_s_orbital(BasisFunction::Type t) {
+    return t == BasisFunction::Type::s;
 }
+
+inline bool is_p_orbital(BasisFunction::Type t) {
+    return t == BasisFunction::Type::px || t == BasisFunction::Type::py || t == BasisFunction::Type::pz;
+}
+
+inline double gaussian_product(double alpha, const Eigen::Vector3d& a, double beta, const Eigen::Vector3d& b) {
+    return std::exp(- alpha * beta / (alpha + beta) * (a - b).squaredNorm());
+}
+
+inline double component_difference(const Eigen::Vector3d& a, const Eigen::Vector3d& b, BasisFunction::Type comp) {
+    assert(is_p_orbital(comp));
+    auto i = static_cast<int>(comp) - 1;
+    return a[i] - b[i];
+}
+
+}
+
+#endif //HELPERS_HPP

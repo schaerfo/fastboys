@@ -18,5 +18,7 @@ endif()
 
 add_executable(fastboys src/main.cpp
                         src/Molecule.hpp
-                        src/Molecule.cpp)
+                        src/Molecule.cpp
+                        src/OneElectronIntegrals.hpp
+                        src/OneElectronIntegrals.cpp src/Helpers.hpp)
 target_link_libraries(fastboys PRIVATE Boost::container Eigen3::Eigen fmt::fmt nlohmann_json::nlohmann_json)
