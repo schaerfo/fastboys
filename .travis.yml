@@ -12,4 +12,4 @@ addons:
       - libboost-container-dev
       - libeigen3-dev
       - libfmt-dev
-      - nlohmann-json3-dev
+      - nlohmann-json-dev
