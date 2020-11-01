@@ -44,8 +44,7 @@ struct BasisFunction {
     enum class Type {
         s = 0b0, px = 0b1, py = 0b10, pz = 0b11
     };
-    //using PrimitiveVec = boost::container::small_vector<PrimitiveFunction, 6>;
-    using PrimitiveVec = std::vector<PrimitiveFunction>;
+    using PrimitiveVec = boost::container::small_vector<PrimitiveFunction, 6>;
 
     Eigen::Vector3d center;
     PrimitiveVec primitives;
