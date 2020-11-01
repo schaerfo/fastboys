@@ -27,6 +27,8 @@
 #include <fmt/core.h>
 #include <nlohmann/json.hpp>
 
+constexpr double ang2bohr = 1.89;
+
 const std::unordered_map<std::string, unsigned> atom_charges = {{"H" , 1},
                                                                 {"He", 2},
                                                                 {"Li", 3},
@@ -67,7 +69,7 @@ Molecule::Molecule(std::istream& xyz) {
         std::string symbol;
         double x, y, z;
         xyz >> symbol >> x >> y >> z;
-        atoms_.emplace_back(symbol, Eigen::Vector3d(x, y, z));
+        atoms_.emplace_back(symbol, ang2bohr * Eigen::Vector3d(x, y, z));
 
     }
 }
