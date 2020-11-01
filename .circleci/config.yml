@@ -1,0 +1,15 @@
+version: 2.1
+jobs:
+  build:
+    docker:
+      - image: 'ubuntu:focal'
+    environment:
+      - DEBIAN_FRONTEND: noninteractive
+      - CC: gcc-10
+      - CXX: g++-10
+      - CXXFLAGS: -Werror
+    steps:
+      - run: apt-get update && apt-get install --no-install-recommends -y cmake g++-10 git libboost-container-dev libeigen3-dev libfmt-dev make nlohmann-json3-dev
+      - checkout
+      - run: cmake -DCMAKE_BUILD_TYPE=Debug .
+      - run: make -j $(nproc)
