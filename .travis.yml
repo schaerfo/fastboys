@@ -6,3 +6,9 @@ compiler:
 script:
   - cmake -DCMAKE_BUILD_TYPE=Debug .
   - make -j $(nproc)
+addons:
+  apt:
+    packages:
+      - libboost-container-dev
+      - libeigen3-dev
+      - libfmt-dev
