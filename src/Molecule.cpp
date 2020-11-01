@@ -69,14 +69,14 @@ void norm_primitives(BasisFunction::PrimitiveVec& primitives, int l) {
 template <typename OutputIt>
 void add_basisfunctions(OutputIt out, const nlohmann::json& shells, const Eigen::Vector3d& center) {
     for (const auto& [foo, curr_shell]: shells.items()) {
-        for (int i=0; i<curr_shell["coefficients"].size(); ++i) {
+        for (unsigned i=0; i<curr_shell["coefficients"].size(); ++i) {
             int curr_l = curr_shell["angular_momentum"][i];
             if (curr_l != 0 && curr_l != 1)
                 throw std::runtime_error(fmt::format("Unsupported angular quantum number: {}", curr_l));
 
             auto curr_coefficients = curr_shell["coefficients"][i];
             BasisFunction::PrimitiveVec primitives;
-            for (int i=0; i<curr_coefficients.size(); ++i)
+            for (unsigned i=0; i<curr_coefficients.size(); ++i)
                 primitives.emplace_back(BasisFunction::PrimitiveFunction{
                     std::stod(static_cast<const std::string&>(curr_shell["exponents"][i])),
                     std::stod(static_cast<const std::string&>(curr_coefficients[i]))});
