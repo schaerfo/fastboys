@@ -24,6 +24,8 @@
 
 #include "Molecule.hpp"
 
+#include <numbers>
+
 #include <Eigen/Dense>
 
 namespace helpers {
@@ -40,10 +42,26 @@ inline double gaussian_product(double alpha, const Eigen::Vector3d& a, double be
     return std::exp(- alpha * beta / (alpha + beta) * (a - b).squaredNorm());
 }
 
-inline double component_difference(const Eigen::Vector3d& a, const Eigen::Vector3d& b, BasisFunction::Type comp) {
+inline double vector_component(const Eigen::Vector3d& vec, BasisFunction::Type comp) {
     assert(is_p_orbital(comp));
     auto i = static_cast<int>(comp) - 1;
-    return a[i] - b[i];
+    return vec[i];
+}
+
+inline double component_difference(const Eigen::Vector3d& a, const Eigen::Vector3d& b, BasisFunction::Type comp) {
+    return vector_component(a, comp) - vector_component(b, comp);
+}
+
+inline double s1(double t) {
+    return std::abs(t) < 1e-15 ? 2 / std::sqrt(std::numbers::pi) : std::erf(t) / t;
+}
+
+inline double s2(double t) {
+    return std::abs(t) < 1e-5 ? -4.0 / (3 * std::sqrt(std::numbers::pi)) : (2 * std::pow(std::numbers::pi, -0.5) * t * std::exp(-t * t) - std::erf(t)) / (t * t * t);
+}
+
+inline double s3(double t) {
+    return std::abs(t) < 1e-3 ? 8.0 / (5 * std::sqrt(std::numbers::pi)) : (3 * std::erf(t) - 2 * (3 * t + 2 * t * t * t) * std::exp(-t * t) / std::sqrt(std::numbers::pi)) / (t * t * t * t * t);
 }
 
 }

@@ -59,6 +59,10 @@ public:
 
     BasisSet construct_basis_set(std::istream& basisset_json) const;
 
+    const std::vector<Atom>& get_atoms() const {
+        return atoms_;
+    }
+
 private:
     std::vector<Atom> atoms_;
 };

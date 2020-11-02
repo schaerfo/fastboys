@@ -28,5 +28,6 @@
 
 Eigen::MatrixXd overlap(const BasisSet& basis_set);
 Eigen::MatrixXd kinetic_energy(const BasisSet& basis_set);
+Eigen::MatrixXd potential_energy(const BasisSet& basis_set, const Molecule& mol);
 
 #endif //ONEELECTRONINTEGRALS_HPP

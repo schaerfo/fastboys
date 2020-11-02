@@ -102,10 +102,67 @@ struct KineticEnergyIntegrals {
     }
 };
 
+struct NuclearPotentialIntegrals {
+    NuclearPotentialIntegrals(const Molecule& mol): mol_(mol) {}
+
+    double prim_ss(double alpha, const Eigen::Vector3d& a, BasisFunction::Type,
+                   double beta, const Eigen::Vector3d& b, BasisFunction::Type) {
+        return nuclear_loop([&, g = helpers::gaussian_product(alpha, a, beta, b),
+                             eta = alpha + beta,
+                             r_raw = (alpha * a + beta * b) / (alpha + beta)](const Eigen::Vector3d& pos) {
+            Eigen::Vector3d r = r_raw - pos;
+            double t = std::sqrt(eta) * r.norm();
+            return g * std::pow(std::numbers::pi, 1.5) / eta * helpers::s1(t);
+        });
+    }
+
+    double prim_ps(double alpha, const Eigen::Vector3d& a, BasisFunction::Type i,
+                   double beta, const Eigen::Vector3d& b, BasisFunction::Type) {
+        return nuclear_loop([&, g = helpers::gaussian_product(alpha, a, beta, b),
+                                    eta = alpha + beta,
+                                    r_raw = (alpha * a + beta * b) / (alpha + beta)](const Eigen::Vector3d& pos) {
+            Eigen::Vector3d r = r_raw - pos;
+            double t = std::sqrt(eta) * r.norm();
+            return g * std::pow(std::numbers::pi, 1.5) / (2 * eta) * (helpers::vector_component(r, i) * helpers::s2(t) - 2 * beta * helpers::component_difference(a, b, i) / eta * helpers::s1(t));
+        });
+    }
+
+    double prim_pp(double alpha, const Eigen::Vector3d& a, BasisFunction::Type i,
+                   double beta, const Eigen::Vector3d& b, BasisFunction::Type j) {
+        return nuclear_loop([&, g = helpers::gaussian_product(alpha, a, beta, b),
+                                    eta = alpha + beta,
+                                    r_raw = (alpha * a + beta * b) / (alpha + beta)](const Eigen::Vector3d& pos) {
+            Eigen::Vector3d r = r_raw - pos;
+            double t = std::sqrt(eta) * r.norm();
+            double r_i = helpers::vector_component(r, i), r_j = helpers::vector_component(r, j);
+            return g * std::pow(std::numbers::pi, 1.5) / (4 * eta * eta)
+                     * (eta * r_i * r_j * helpers::s3(t)
+                        + ((i == j) + 2 * alpha * helpers::component_difference(a, b, j) * r_i - 2 * beta * helpers::component_difference(a, b, i) * r_j) * helpers::s2(t)
+                        + (2 * (i == j) - 4 * alpha * beta * helpers::component_difference(a, b, i) * helpers::component_difference(a, b, j) / eta) * helpers::s1(t));
+        });
+    }
+
+private:
+    const Molecule& mol_;
+
+    template<typename Func>
+    double nuclear_loop(Func f) {
+        double res = 0;
+        for (const auto& curr_atom: mol_.get_atoms()) {
+            res -= curr_atom.charge_ * f(curr_atom.pos_);
+        }
+        return res;
+    }
+};
+
 Eigen::MatrixXd overlap(const BasisSet& basis_set) {
     return one_electron_matrix(basis_set, OverlapIntegrals());
 }
 
 Eigen::MatrixXd kinetic_energy(const BasisSet& basis_set) {
     return one_electron_matrix(basis_set, KineticEnergyIntegrals());
+}
+
+Eigen::MatrixXd potential_energy(const BasisSet& basis_set, const Molecule& mol) {
+    return one_electron_matrix(basis_set, NuclearPotentialIntegrals(mol));
 }

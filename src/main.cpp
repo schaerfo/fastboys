@@ -47,6 +47,7 @@ int main(int argc, char** argv) {
     auto b = m.construct_basis_set(basis);
     auto s = overlap(b);
     auto k = kinetic_energy(b);
-    std::cout << s << "\n\n" << k << '\n';
+    auto v = potential_energy(b, m);
+    std::cout << s << "\n\n" << k << "\n\n" << v << '\n';
     return 0;
 }
