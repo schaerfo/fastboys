@@ -81,6 +81,31 @@ struct OverlapIntegrals {
     }
 };
 
+struct KineticEnergyIntegrals {
+    double prim_ss(double alpha, const Eigen::Vector3d& a, BasisFunction::Type,
+                   double beta, const Eigen::Vector3d& b, BasisFunction::Type) {
+        return helpers::gaussian_product(alpha, a, beta, b) * alpha * beta * std::pow(std::numbers::pi, 1.5) / std::pow(alpha + beta, 2.5)
+                    * (3 - 2 * alpha * beta / (alpha + beta) * (a - b).squaredNorm());
+    }
+
+    double prim_ps(double alpha, const Eigen::Vector3d& a, BasisFunction::Type i,
+                   double beta, const Eigen::Vector3d& b, BasisFunction::Type) {
+        return helpers::gaussian_product(alpha, a, beta, b) * alpha * beta * std::pow(std::numbers::pi, 1.5) / std::pow(alpha + beta, 3.5)
+                    * (2 * alpha * beta / (alpha + beta) * (a - b).squaredNorm() - 5) * helpers::component_difference(a, b, i);
+    }
+
+    double prim_pp(double alpha, const Eigen::Vector3d& a, BasisFunction::Type i,
+                   double beta, const Eigen::Vector3d& b, BasisFunction::Type j) {
+        return helpers::gaussian_product(alpha, a, beta, b) * alpha * beta * std::pow(std::numbers::pi, 1.5) / std::pow(alpha + beta, 3.5)
+                     * ((i == j) * 2.5 - alpha * beta / (alpha + beta) * (a - b).squaredNorm()
+                        + alpha * beta / (alpha + beta) * (2 * alpha * beta / (alpha + beta) * (a - b).squaredNorm() - 7) * helpers::component_difference(a, b, i) * helpers::component_difference(a, b, j));
+    }
+};
+
 Eigen::MatrixXd overlap(const BasisSet& basis_set) {
     return one_electron_matrix(basis_set, OverlapIntegrals());
+}
+
+Eigen::MatrixXd kinetic_energy(const BasisSet& basis_set) {
+    return one_electron_matrix(basis_set, KineticEnergyIntegrals());
 }

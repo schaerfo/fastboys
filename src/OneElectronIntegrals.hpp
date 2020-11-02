@@ -27,5 +27,6 @@
 #include <Eigen/Dense>
 
 Eigen::MatrixXd overlap(const BasisSet& basis_set);
+Eigen::MatrixXd kinetic_energy(const BasisSet& basis_set);
 
 #endif //ONEELECTRONINTEGRALS_HPP
