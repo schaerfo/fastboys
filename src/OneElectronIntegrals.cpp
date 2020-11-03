@@ -25,7 +25,12 @@
 
 #include <numbers>
 
-double add_primitive_integrals(const BasisFunction& r, const BasisFunction& s, auto func, auto obj) {
+template <typename FunctionSet>
+using IntegralFunc = double (FunctionSet::*)(double, const Eigen::Vector3d&, BasisFunction::Type,
+                                             double, const Eigen::Vector3d&, BasisFunction::Type);
+
+template <typename FunctionSet>
+double add_primitive_integrals(const BasisFunction& r, const BasisFunction& s, IntegralFunc<FunctionSet> func, FunctionSet obj) {
     double res = 0;
     for (const auto& [alpha, a]: r.primitives) {
         for (const auto& [beta, b]: s.primitives) {
@@ -36,7 +41,7 @@ double add_primitive_integrals(const BasisFunction& r, const BasisFunction& s, a
 }
 
 template<typename FunctionSet>
-auto get_primitive_function(BasisFunction::Type r_type, BasisFunction::Type s_type) {
+IntegralFunc<FunctionSet> get_primitive_function(BasisFunction::Type r_type, BasisFunction::Type s_type) {
     if (helpers::is_s_orbital(r_type))
         return &FunctionSet::prim_ss;
     else if (helpers::is_s_orbital(s_type))
