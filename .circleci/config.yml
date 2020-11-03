@@ -1,6 +1,6 @@
 version: 2.1
 jobs:
-  build:
+  build_gcc:
     docker:
       - image: 'ubuntu:focal'
     environment:
@@ -13,3 +13,24 @@ jobs:
       - checkout
       - run: cmake . -G Ninja -DCMAKE_BUILD_TYPE=Debug
       - run: ninja -v
+
+  build_clang:
+    docker:
+      - image: 'ubuntu:focal'
+    environment:
+      - DEBIAN_FRONTEND: noninteractive
+      - CC: clang-10
+      - CXX: clang++-10
+      - CXXFLAGS: -Werror
+    steps:
+      - run: apt-get update && apt-get install --no-install-recommends -y clang-10 cmake git libboost-container-dev libeigen3-dev libfmt-dev libstdc++-10-dev ninja-build nlohmann-json3-dev
+      - checkout
+      - run: cmake . -G Ninja -DCMAKE_BUILD_TYPE=Debug
+      - run: ninja -v
+
+workflows:
+  version: 2.1
+  build_all:
+    jobs:
+      - build_gcc
+      - build_clang
