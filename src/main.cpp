@@ -22,26 +22,40 @@
 #include <fstream>
 #include <iostream>
 
+#include <boost/program_options.hpp>
+#include <omp.h>
+
 #include "Molecule.hpp"
 #include "OneElectronIntegrals.hpp"
 
+namespace po = boost::program_options;
+
 int main(int argc, char** argv) {
-    if (argc < 3) {
-        std::cerr << "Usage: fastboys <input.xyz> <basisset.json>\n";
+    po::options_description desc("fastboys options");
+    desc.add_options()
+            ("input", po::value<std::string>()->required(), "xyz input file (required)")
+            ("basisset", po::value<std::string>()->required(), "JSON basisset file (required)");
+
+    po::variables_map vm;
+    try {
+        po::store(po::parse_command_line(argc, argv, desc), vm);
+        po::notify(vm);
+    } catch (const po::error& e) {
+        std::cerr << e.what() << "\n\n" << desc << '\n';
         return 1;
     }
 
-    std::ifstream input(argv[1]);
+    std::ifstream input(vm["input"].as<std::string>());
     if (!input.is_open()) {
-        std::cerr << "Could not open file: " << argv[1] << '\n';
+        std::cerr << "Could not open file: " << vm["input"].as<std::string>() << '\n';
         return 2;
     }
 
     Molecule m(input);
 
-    std::ifstream basis(argv[2]);
+    std::ifstream basis(vm["basisset"].as<std::string>());
     if (!basis.is_open()) {
-        std::cerr << "Could not open file: " << argv[2] << '\n';
+        std::cerr << "Could not open file: " << vm["basisset"].as<std::string>() << '\n';
         return 2;
     }
     auto b = m.construct_basis_set(basis);
