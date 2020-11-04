@@ -6,8 +6,6 @@ env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Debug
   CXXFLAGS: -Werror
-  CC: gcc-10
-  CXX: g++-10
 
 jobs:
   build:
@@ -16,12 +14,16 @@ jobs:
     # cross-platform coverage.
     # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
     runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        compiler: [g++-10, clang++-10]
+      fail-fast: false
 
     steps:
     - uses: actions/checkout@v2
     
     - name: Install dependencies
-      run: sudo apt-get install gcc-10 g++-10 libboost-container-dev nlohmann-json3-dev libfmt-dev libeigen3-dev
+      run: sudo apt-get install libboost-container-dev nlohmann-json3-dev libfmt-dev libeigen3-dev
 
     - name: Create Build Environment
       # Some projects don't allow in-source building, so create a separate build directory
@@ -33,6 +35,8 @@ jobs:
       # access regardless of the host operating system
       shell: bash
       working-directory: ${{runner.workspace}}/build
+      env:
+        CXX: ${{ matrix.compiler }}
       # Note the current convention is to use the -S and -B options here to specify source 
       # and build directories, but this is only available with CMake 3.13 and higher.  
       # The CMake binaries on the Github Actions machines are (as of this writing) 3.12
