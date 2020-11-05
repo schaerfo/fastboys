@@ -16,9 +16,38 @@ else()
     add_compile_options(-Wall -Wextra -pedantic)
 endif()
 
-add_executable(fastboys src/main.cpp
-                        src/Molecule.hpp
-                        src/Molecule.cpp
-                        src/OneElectronIntegrals.hpp
-                        src/OneElectronIntegrals.cpp src/Helpers.hpp)
-target_link_libraries(fastboys PRIVATE Boost::container Boost::program_options Eigen3::Eigen fmt::fmt nlohmann_json::nlohmann_json)
+add_library(fastboys_common OBJECT src/Molecule.hpp
+                                   src/Molecule.cpp
+                                   src/OneElectronIntegrals.hpp
+                                   src/OneElectronIntegrals.cpp
+                                   src/Helpers.hpp)
+
+target_link_libraries(fastboys_common PUBLIC Boost::container Eigen3::Eigen fmt::fmt nlohmann_json::nlohmann_json)
+
+add_executable(fastboys src/main.cpp)
+target_link_libraries(fastboys PRIVATE Boost::program_options fastboys_common)
+
+set(GTEST_SRC_PATH /usr/src/googletest/googletest/src)
+file(GLOB TEST_SRC test/*.cpp)
+find_package(GTest)
+if (${GTEST_FOUND})
+    add_executable(fastboys_test ${TEST_SRC})
+    target_include_directories(fastboys_test SYSTEM PRIVATE src)
+    target_link_libraries(fastboys_test fastboys_common GTest::Main)
+    set(BUILD_TESTS On)
+elseif(EXISTS ${GTEST_SRC_PATH})
+    add_executable(fastboys_test ${TEST_SRC} ${GTEST_SRC_PATH}/gtest-all.cc ${GTEST_SRC_PATH}/gtest_main.cc)
+    target_include_directories(fastboys_test SYSTEM PRIVATE ${GTEST_SRC_PATH}/include ${GTEST_SRC_PATH})
+    target_link_libraries(fastboys_test fastboys_common pthread)
+    set(BUILD_TESTS On)
+else()
+    set(BUILD_TESTS Off)
+endif()
+
+if(BUILD_TESTS)
+    enable_testing()
+    gtest_discover_tests(fastboys_test)
+    message("Building tests")
+else()
+    message("Googletest not found, not building tests")
+endif()
