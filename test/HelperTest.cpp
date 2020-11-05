@@ -26,7 +26,7 @@
 class HelpersTest: public ::testing::Test {
 protected:
     void SetUp() override {
-        s = px = py = pz = BasisFunction({0, 0, 0}, {}, BasisFunction::Type::s);
+        s = px = py = pz = BasisFunction{{0, 0, 0}, {}, BasisFunction::Type::s};
         px.type = BasisFunction::Type::px;
         py.type = BasisFunction::Type::py;
         pz.type = BasisFunction::Type::pz;
