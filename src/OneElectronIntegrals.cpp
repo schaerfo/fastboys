@@ -46,6 +46,11 @@ auto get_primitive_function(BasisFunction::Type r_type, BasisFunction::Type s_ty
         return &FunctionSet::integral_pp;
 }
 
+void order_orbital_tuple(const BasisFunction*& r, const BasisFunction*& s) {
+    if (helpers::is_s_orbital(r->type) && helpers::is_p_orbital(s->type))
+        std::swap(r, s);
+}
+
 template <typename FunctionSet>
 Eigen::MatrixXd one_electron_matrix(const BasisSet& set, FunctionSet functions) {
     auto n = set.size();
@@ -55,9 +60,7 @@ Eigen::MatrixXd one_electron_matrix(const BasisSet& set, FunctionSet functions) 
         for(std::size_t j=i; j<n; ++j) {
             const auto* r = &set[i];
             const auto* s = &set[j];
-
-            if (helpers::is_s_orbital(r->type) && helpers::is_p_orbital(s->type))
-                std::swap(r, s);
+            order_orbital_tuple(r, s);
 
             res(i, j) = res(j, i) = std::invoke(get_primitive_function<FunctionSet>(r->type, s->type), functions, *r, *s);
         }
