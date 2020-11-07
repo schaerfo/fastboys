@@ -108,7 +108,7 @@ struct KineticEnergyIntegrals {
     double integral_ps(const BasisFunction& r, const BasisFunction& s) {
         assert(helpers::is_p_orbital(r.type) && helpers::is_s_orbital(s.type));
         return add_primitive_integrals(r, s, [a = r.center, i = r.type, b = s.center](auto alpha, auto beta) {
-            return helpers::gaussian_product(alpha, a, beta, b) * alpha * beta * std::pow(std::numbers::pi, 1.5) /
+            return helpers::gaussian_product(alpha, a, beta, b) * alpha * beta * beta * std::pow(std::numbers::pi, 1.5) /
                    std::pow(alpha + beta, 3.5)
                    * (2 * alpha * beta / (alpha + beta) * (a - b).squaredNorm() - 5) *
                    helpers::component_difference(a, b, i);
