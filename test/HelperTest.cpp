@@ -48,3 +48,21 @@ TEST_F(HelpersTest, is_p_orbital_test) {
     EXPECT_TRUE(helpers::is_p_orbital(py.type));
     EXPECT_TRUE(helpers::is_p_orbital(pz.type));
 }
+
+TEST_F(HelpersTest, vector_component_test) {
+    px.center = {0, 1, 2};
+    EXPECT_EQ(helpers::vector_component(px.center, BasisFunction::Type::px), 0);
+    EXPECT_EQ(helpers::vector_component(px.center, BasisFunction::Type::py), 1);
+    EXPECT_EQ(helpers::vector_component(px.center, BasisFunction::Type::pz), 2);
+}
+
+TEST_F(HelpersTest, component_difference_test) {
+    px.center = {1, 2, 3};
+    EXPECT_EQ(helpers::component_difference(px.center, py.center, BasisFunction::Type::px), 1);
+    EXPECT_EQ(helpers::component_difference(px.center, py.center, BasisFunction::Type::py), 2);
+    EXPECT_EQ(helpers::component_difference(px.center, py.center, BasisFunction::Type::pz), 3);
+
+    EXPECT_EQ(helpers::component_difference(py.center, px.center, BasisFunction::Type::px), -1);
+    EXPECT_EQ(helpers::component_difference(py.center, px.center, BasisFunction::Type::py), -2);
+    EXPECT_EQ(helpers::component_difference(py.center, px.center, BasisFunction::Type::pz), -3);
+}
