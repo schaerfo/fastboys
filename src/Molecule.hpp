@@ -55,12 +55,18 @@ using BasisSet = std::vector<BasisFunction>;
 
 class Molecule {
 public:
+    Molecule() = default;
+
     explicit Molecule(std::istream& xyz);
 
     BasisSet construct_basis_set(std::istream& basisset_json) const;
 
     const std::vector<Atom>& get_atoms() const {
         return atoms_;
+    }
+
+    void setAtoms(const std::vector<Atom>& atoms) {
+        atoms_ = atoms;
     }
 
 private:

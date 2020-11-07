@@ -120,7 +120,7 @@ struct KineticEnergyIntegrals {
         return add_primitive_integrals(r, s, [a = r.center, i = r.type, b = s.center, j = s.type](auto alpha, auto beta) {
             return helpers::gaussian_product(alpha, a, beta, b) * alpha * beta * std::pow(std::numbers::pi, 1.5) /
                    std::pow(alpha + beta, 3.5)
-                   * ((i == j) * 2.5 - alpha * beta / (alpha + beta) * (a - b).squaredNorm()
+                   * ((i == j) * (2.5 - alpha * beta / (alpha + beta) * (a - b).squaredNorm())
                       +
                       alpha * beta / (alpha + beta) * (2 * alpha * beta / (alpha + beta) * (a - b).squaredNorm() - 7) *
                       helpers::component_difference(a, b, i) * helpers::component_difference(a, b, j));
