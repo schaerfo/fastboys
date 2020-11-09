@@ -27,7 +27,7 @@ jobs:
       - CXX: clang++-10
       - CXXFLAGS: -Werror
     steps:
-      - run: apt-get update && apt-get install --no-install-recommends -y clang-10 cmake git googletest libboost-container-dev libboost-program-options-dev libeigen3-dev libfmt-dev libstdc++-10-dev ninja-build nlohmann-json3-dev
+      - run: apt-get update && apt-get install --no-install-recommends -y clang-10 cmake curl git googletest libboost-container-dev libboost-program-options-dev libeigen3-dev libfmt-dev libstdc++-10-dev ninja-build nlohmann-json3-dev
       - checkout
       - run: cmake . -G Ninja -DCMAKE_BUILD_TYPE=Debug
       - run: ninja -v
