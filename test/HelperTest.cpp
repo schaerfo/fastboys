@@ -66,3 +66,9 @@ TEST_F(HelpersTest, component_difference_test) {
     EXPECT_EQ(helpers::component_difference(py.center, px.center, BasisFunction::Type::py), -2);
     EXPECT_EQ(helpers::component_difference(py.center, px.center, BasisFunction::Type::pz), -3);
 }
+
+TEST(HelpersDeathTest, vector_difference) {
+    Eigen::Vector3d pos{0, 0, 0};
+    EXPECT_DEBUG_DEATH(helpers::vector_component(pos, BasisFunction::Type::s), "");
+    EXPECT_DEBUG_DEATH(helpers::component_difference(pos, pos, BasisFunction::Type::s), "");
+}

@@ -23,6 +23,7 @@
 
 #include "Molecule.hpp"
 #include "OneElectronIntegrals.hpp"
+#include "OneElectronIntegralDetail.hpp"
 
 class OneElectronIntegralTest: public ::testing::Test {
 protected:
@@ -176,4 +177,56 @@ TEST_F(OneElectronIntegralTest, potential_energy_matrix_test) {
 
     auto ethene_actual = potential_energy(ethene_basis, ethene);
     EXPECT_TRUE(ethene_expected.isApprox(ethene_actual, 1e-6));
+}
+
+class OneElectronIntegralDeathTest: public ::testing::Test {
+protected:
+    void SetUp() override {
+        Eigen::Vector3d pos = {0, 0, 0};
+
+        s = p = BasisFunction{pos, {}, BasisFunction::Type::s};
+        p.type = BasisFunction::Type::px;
+    }
+
+    BasisFunction s, p;
+    Molecule m;
+};
+
+TEST_F(OneElectronIntegralDeathTest, overlap_test) {
+    OverlapIntegrals overlap;
+    EXPECT_DEBUG_DEATH(overlap.integral_ss(s, p), "");
+    EXPECT_DEBUG_DEATH(overlap.integral_ss(p, s), "");
+    EXPECT_DEBUG_DEATH(overlap.integral_ss(p, p), "");
+    EXPECT_DEBUG_DEATH(overlap.integral_ps(s, s), "");
+    EXPECT_DEBUG_DEATH(overlap.integral_ps(s, p), "");
+    EXPECT_DEBUG_DEATH(overlap.integral_ps(p, p), "");
+    EXPECT_DEBUG_DEATH(overlap.integral_pp(s, s), "");
+    EXPECT_DEBUG_DEATH(overlap.integral_pp(s, p), "");
+    EXPECT_DEBUG_DEATH(overlap.integral_pp(p, s), "");
+}
+
+TEST_F(OneElectronIntegralDeathTest, kinetic_energy_test) {
+    KineticEnergyIntegrals kinetic_energy;
+    EXPECT_DEBUG_DEATH(kinetic_energy.integral_ss(s, p), "");
+    EXPECT_DEBUG_DEATH(kinetic_energy.integral_ss(p, s), "");
+    EXPECT_DEBUG_DEATH(kinetic_energy.integral_ss(p, p), "");
+    EXPECT_DEBUG_DEATH(kinetic_energy.integral_ps(s, s), "");
+    EXPECT_DEBUG_DEATH(kinetic_energy.integral_ps(s, p), "");
+    EXPECT_DEBUG_DEATH(kinetic_energy.integral_ps(p, p), "");
+    EXPECT_DEBUG_DEATH(kinetic_energy.integral_pp(s, s), "");
+    EXPECT_DEBUG_DEATH(kinetic_energy.integral_pp(s, p), "");
+    EXPECT_DEBUG_DEATH(kinetic_energy.integral_pp(p, s), "");
+}
+
+TEST_F(OneElectronIntegralDeathTest, nuclear_energy_test) {
+    NuclearPotentialIntegrals nuclear_energy(m);
+    EXPECT_DEBUG_DEATH(nuclear_energy.integral_ss(s, p), "");
+    EXPECT_DEBUG_DEATH(nuclear_energy.integral_ss(p, s), "");
+    EXPECT_DEBUG_DEATH(nuclear_energy.integral_ss(p, p), "");
+    EXPECT_DEBUG_DEATH(nuclear_energy.integral_ps(s, s), "");
+    EXPECT_DEBUG_DEATH(nuclear_energy.integral_ps(s, p), "");
+    EXPECT_DEBUG_DEATH(nuclear_energy.integral_ps(p, p), "");
+    EXPECT_DEBUG_DEATH(nuclear_energy.integral_pp(s, s), "");
+    EXPECT_DEBUG_DEATH(nuclear_energy.integral_pp(s, p), "");
+    EXPECT_DEBUG_DEATH(nuclear_energy.integral_pp(p, s), "");
 }
