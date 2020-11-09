@@ -1,6 +1,4 @@
 version: 2.1
-orbs:
-  codecov: codecov/codecov@1.0.2
 
 jobs:
   build_gcc:
@@ -48,9 +46,9 @@ jobs:
       - run: cmake . -G Ninja -DCMAKE_BUILD_TYPE=Debug
       - run: ninja -v
       - run: ctest
-      - run: lcov -c -d CMakeFiles/fastboys_common.dir/src -o coverage.info
-      - codecov/upload:
-          file: coverage.info
+      - run:
+          shell: /bin/bash
+          command: bash <(curl -s https://codecov.io/bash)
 
 workflows:
   version: 2.1
