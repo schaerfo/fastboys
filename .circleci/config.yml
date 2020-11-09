@@ -1,4 +1,6 @@
 version: 2.1
+orbs:
+  codecov: codecov/codecov@1.0.2
 jobs:
   build_gcc:
     docker:
@@ -40,12 +42,14 @@ jobs:
       - CXXFLAGS: -Werror --coverage
       - LDFLAGS: --coverage
     steps:
-      - run: apt-get update && apt-get install --no-install-recommends -y cmake curl g++-10 git googletest libboost-container-dev libboost-program-options-dev libeigen3-dev libfmt-dev ninja-build nlohmann-json3-dev
+      - run: apt-get update && apt-get install --no-install-recommends -y cmake g++-10 git googletest lcov libboost-container-dev libboost-program-options-dev libeigen3-dev libfmt-dev ninja-build nlohmann-json3-dev
       - checkout
       - run: cmake . -G Ninja -DCMAKE_BUILD_TYPE=Debug
       - run: ninja -v
       - run: ctest
-      - run: bash <(curl -s https://codecov.io/bash)
+      - run: lcov -c -d CMakeFiles/fastboys_common.dir/src -o coverage.info
+      - codecov/upload:
+          file: coverage.info
 
 workflows:
   version: 2.1
