@@ -30,9 +30,27 @@ jobs:
       - run: ninja -v
       - run: ctest
 
+  build_coverage:
+    docker:
+      - image: 'ubuntu:focal'
+    environment:
+      - DEBIAN_FRONTEND: noninteractive
+      - CC: gcc-10
+      - CXX: g++-10
+      - CXXFLAGS: -Werror --coverage
+      - LDFLAGS: --coverage
+    steps:
+      - run: apt-get update && apt-get install --no-install-recommends -y cmake g++-10 git googletest libboost-container-dev libboost-program-options-dev libeigen3-dev libfmt-dev ninja-build nlohmann-json3-dev
+      - checkout
+      - run: cmake . -G Ninja -DCMAKE_BUILD_TYPE=Debug
+      - run: ninja -v
+      - run: ctest
+      - run: bash <(curl -s https://codecov.io/bash)
+
 workflows:
   version: 2.1
   build_all:
     jobs:
       - build_gcc
       - build_clang
+      - build_coverage
