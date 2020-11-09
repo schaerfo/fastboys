@@ -20,6 +20,7 @@
  */
 
 #include "OneElectronIntegrals.hpp"
+#include "OneElectronIntegralDetail.hpp"
 
 #include "Helpers.hpp"
 
@@ -68,128 +69,108 @@ Eigen::MatrixXd one_electron_matrix(const BasisSet& set, FunctionSet functions) 
     return res;
 }
 
-struct OverlapIntegrals {
-    double integral_ss(const BasisFunction& r, const BasisFunction& s) {
-        assert(helpers::is_s_orbital(r.type) && helpers::is_s_orbital(s.type));
-        return add_primitive_integrals(r, s, [a = r.center, b = s.center](auto alpha, auto beta) {
-            return helpers::gaussian_product(alpha, a, beta, b) * std::pow(std::numbers::pi / (alpha + beta), 1.5);
+double OverlapIntegrals::integral_ss(const BasisFunction& r, const BasisFunction& s) {
+    assert(helpers::is_s_orbital(r.type) && helpers::is_s_orbital(s.type));
+    return add_primitive_integrals(r, s, [a = r.center, b = s.center](auto alpha, auto beta) {
+        return helpers::gaussian_product(alpha, a, beta, b) * std::pow(std::numbers::pi / (alpha + beta), 1.5);
+    });
+}
+
+double OverlapIntegrals::integral_ps(const BasisFunction& r, const BasisFunction& s) {
+    assert(helpers::is_p_orbital(r.type) && helpers::is_s_orbital(s.type));
+    return add_primitive_integrals(r, s, [a = r.center, i = r.type, b = s.center](auto alpha, auto beta) {
+        return -helpers::gaussian_product(alpha, a, beta, b) * beta * std::pow(std::numbers::pi, 1.5) /
+               std::pow(alpha + beta, 2.5) * helpers::component_difference(a, b, i);
+    });
+}
+
+double OverlapIntegrals::integral_pp(const BasisFunction& r, const BasisFunction& s) {
+    assert(helpers::is_p_orbital(r.type) && helpers::is_p_orbital(s.type));
+    return add_primitive_integrals(r, s, [a = r.center, i = r.type, b = s.center, j = s.type](auto alpha, auto beta) {
+        return helpers::gaussian_product(alpha, a, beta, b) * std::pow(std::numbers::pi, 1.5) /
+               std::pow(alpha + beta, 2.5) * (0.5 * (i == j) - alpha * beta / (alpha + beta) *
+                                                               helpers::component_difference(a, b, i) *
+                                                               helpers::component_difference(a, b, j));
+    });
+}
+
+double KineticEnergyIntegrals::integral_ss(const BasisFunction& r, const BasisFunction& s) {
+    assert(helpers::is_s_orbital(r.type) && helpers::is_s_orbital(s.type));
+    return add_primitive_integrals(r, s, [a = r.center, b = s.center](auto alpha, auto beta) {
+        return helpers::gaussian_product(alpha, a, beta, b) * alpha * beta * std::pow(std::numbers::pi, 1.5) /
+               std::pow(alpha + beta, 2.5)
+               * (3 - 2 * alpha * beta / (alpha + beta) * (a - b).squaredNorm());
+    });
+}
+
+double KineticEnergyIntegrals::integral_ps(const BasisFunction& r, const BasisFunction& s) {
+    assert(helpers::is_p_orbital(r.type) && helpers::is_s_orbital(s.type));
+    return add_primitive_integrals(r, s, [a = r.center, i = r.type, b = s.center](auto alpha, auto beta) {
+        return helpers::gaussian_product(alpha, a, beta, b) * alpha * beta * beta * std::pow(std::numbers::pi, 1.5) /
+               std::pow(alpha + beta, 3.5)
+               * (2 * alpha * beta / (alpha + beta) * (a - b).squaredNorm() - 5) *
+               helpers::component_difference(a, b, i);
+    });
+}
+
+double KineticEnergyIntegrals::integral_pp(const BasisFunction& r, const BasisFunction& s) {
+    assert(helpers::is_p_orbital(r.type) && helpers::is_p_orbital(s.type));
+    return add_primitive_integrals(r, s, [a = r.center, i = r.type, b = s.center, j = s.type](auto alpha, auto beta) {
+        return helpers::gaussian_product(alpha, a, beta, b) * alpha * beta * std::pow(std::numbers::pi, 1.5) /
+               std::pow(alpha + beta, 3.5)
+               * ((i == j) * (2.5 - alpha * beta / (alpha + beta) * (a - b).squaredNorm())
+                  +
+                  alpha * beta / (alpha + beta) * (2 * alpha * beta / (alpha + beta) * (a - b).squaredNorm() - 7) *
+                  helpers::component_difference(a, b, i) * helpers::component_difference(a, b, j));
+    });
+}
+
+double NuclearPotentialIntegrals::integral_ss(const BasisFunction& r, const BasisFunction& s) {
+    assert(helpers::is_s_orbital(r.type) && helpers::is_s_orbital(s.type));
+    return add_primitive_integrals(r, s, [this, a = r.center, b = s.center](auto alpha, auto beta) {
+        return nuclear_loop([&, g = helpers::gaussian_product(alpha, a, beta, b),
+                                    eta = alpha + beta,
+                                    r_raw = (alpha * a + beta * b) / (alpha + beta)](const Eigen::Vector3d& pos) {
+            Eigen::Vector3d r = r_raw - pos;
+            double t = std::sqrt(eta) * r.norm();
+            return g * std::pow(std::numbers::pi, 1.5) / eta * helpers::s1(t);
         });
-    }
+    });
+}
 
-    double integral_ps(const BasisFunction& r, const BasisFunction& s){
-        assert(helpers::is_p_orbital(r.type) && helpers::is_s_orbital(s.type));
-        return add_primitive_integrals(r, s, [a = r.center, i = r.type, b = s.center](auto alpha, auto beta) {
-            return -helpers::gaussian_product(alpha, a, beta, b) * beta * std::pow(std::numbers::pi, 1.5) /
-                   std::pow(alpha + beta, 2.5) * helpers::component_difference(a, b, i);
+double NuclearPotentialIntegrals::integral_ps(const BasisFunction& r, const BasisFunction& s) {
+    assert(helpers::is_p_orbital(r.type) && helpers::is_s_orbital(s.type));
+    return add_primitive_integrals(r, s, [this, a = r.center, i = r.type, b = s.center](auto alpha, auto beta) {
+        return nuclear_loop([&, g = helpers::gaussian_product(alpha, a, beta, b),
+                                    eta = alpha + beta,
+                                    r_raw = (alpha * a + beta * b) / (alpha + beta)](const Eigen::Vector3d& pos) {
+            Eigen::Vector3d r = r_raw - pos;
+            double t = std::sqrt(eta) * r.norm();
+            return g * std::pow(std::numbers::pi, 1.5) / (2 * eta) *
+                   (helpers::vector_component(r, i) * helpers::s2(t) -
+                    2 * beta * helpers::component_difference(a, b, i) / eta * helpers::s1(t));
         });
-    }
+    });
+}
 
-    double integral_pp(const BasisFunction& r, const BasisFunction& s) {
-        assert(helpers::is_p_orbital(r.type) && helpers::is_p_orbital(s.type));
-        return add_primitive_integrals(r, s, [a = r.center, i = r.type, b = s.center, j = s.type](auto alpha, auto beta) {
-            return helpers::gaussian_product(alpha, a, beta, b) * std::pow(std::numbers::pi, 1.5) /
-                   std::pow(alpha + beta, 2.5) * (0.5 * (i == j) - alpha * beta / (alpha + beta) *
-                                                                   helpers::component_difference(a, b, i) *
-                                                                   helpers::component_difference(a, b, j));
+double NuclearPotentialIntegrals::integral_pp(const BasisFunction& r, const BasisFunction& s) {
+    assert(helpers::is_p_orbital(r.type) && helpers::is_p_orbital(s.type));
+    return add_primitive_integrals(r, s, [this, a = r.center, i = r.type, b = s.center, j = s.type](auto alpha, auto beta) {
+        return nuclear_loop([&, g = helpers::gaussian_product(alpha, a, beta, b),
+                                    eta = alpha + beta,
+                                    r_raw = (alpha * a + beta * b) / (alpha + beta)](const Eigen::Vector3d& pos) {
+            Eigen::Vector3d r = r_raw - pos;
+            double t = std::sqrt(eta) * r.norm();
+            double r_i = helpers::vector_component(r, i), r_j = helpers::vector_component(r, j);
+            return g * std::pow(std::numbers::pi, 1.5) / (4 * eta * eta)
+                   * (eta * r_i * r_j * helpers::s3(t)
+                      + ((i == j) + 2 * alpha * helpers::component_difference(a, b, j) * r_i -
+                         2 * beta * helpers::component_difference(a, b, i) * r_j) * helpers::s2(t)
+                      + (2 * (i == j) - 4 * alpha * beta * helpers::component_difference(a, b, i) *
+                                        helpers::component_difference(a, b, j) / eta) * helpers::s1(t));
         });
-    }
-};
-
-struct KineticEnergyIntegrals {
-    double integral_ss(const BasisFunction& r, const BasisFunction& s) {
-        assert(helpers::is_s_orbital(r.type) && helpers::is_s_orbital(s.type));
-        return add_primitive_integrals(r, s, [a = r.center, b = s.center](auto alpha, auto beta) {
-            return helpers::gaussian_product(alpha, a, beta, b) * alpha * beta * std::pow(std::numbers::pi, 1.5) /
-                   std::pow(alpha + beta, 2.5)
-                   * (3 - 2 * alpha * beta / (alpha + beta) * (a - b).squaredNorm());
-        });
-    }
-
-    double integral_ps(const BasisFunction& r, const BasisFunction& s) {
-        assert(helpers::is_p_orbital(r.type) && helpers::is_s_orbital(s.type));
-        return add_primitive_integrals(r, s, [a = r.center, i = r.type, b = s.center](auto alpha, auto beta) {
-            return helpers::gaussian_product(alpha, a, beta, b) * alpha * beta * beta * std::pow(std::numbers::pi, 1.5) /
-                   std::pow(alpha + beta, 3.5)
-                   * (2 * alpha * beta / (alpha + beta) * (a - b).squaredNorm() - 5) *
-                   helpers::component_difference(a, b, i);
-        });
-    }
-
-    double integral_pp(const BasisFunction& r, const BasisFunction& s) {
-        assert(helpers::is_p_orbital(r.type) && helpers::is_p_orbital(s.type));
-        return add_primitive_integrals(r, s, [a = r.center, i = r.type, b = s.center, j = s.type](auto alpha, auto beta) {
-            return helpers::gaussian_product(alpha, a, beta, b) * alpha * beta * std::pow(std::numbers::pi, 1.5) /
-                   std::pow(alpha + beta, 3.5)
-                   * ((i == j) * (2.5 - alpha * beta / (alpha + beta) * (a - b).squaredNorm())
-                      +
-                      alpha * beta / (alpha + beta) * (2 * alpha * beta / (alpha + beta) * (a - b).squaredNorm() - 7) *
-                      helpers::component_difference(a, b, i) * helpers::component_difference(a, b, j));
-        });
-    }
-};
-
-struct NuclearPotentialIntegrals {
-    NuclearPotentialIntegrals(const Molecule& mol): mol_(mol) {}
-
-    double integral_ss(const BasisFunction& r, const BasisFunction& s) {
-        assert(helpers::is_s_orbital(r.type) && helpers::is_s_orbital(s.type));
-        return add_primitive_integrals(r, s, [this, a = r.center, b = s.center](auto alpha, auto beta) {
-            return nuclear_loop([&, g = helpers::gaussian_product(alpha, a, beta, b),
-                                        eta = alpha + beta,
-                                        r_raw = (alpha * a + beta * b) / (alpha + beta)](const Eigen::Vector3d& pos) {
-                Eigen::Vector3d r = r_raw - pos;
-                double t = std::sqrt(eta) * r.norm();
-                return g * std::pow(std::numbers::pi, 1.5) / eta * helpers::s1(t);
-            });
-        });
-    }
-
-    double integral_ps(const BasisFunction& r, const BasisFunction& s) {
-        assert(helpers::is_p_orbital(r.type) && helpers::is_s_orbital(s.type));
-        return add_primitive_integrals(r, s, [this, a = r.center, i = r.type, b = s.center](auto alpha, auto beta) {
-            return nuclear_loop([&, g = helpers::gaussian_product(alpha, a, beta, b),
-                                        eta = alpha + beta,
-                                        r_raw = (alpha * a + beta * b) / (alpha + beta)](const Eigen::Vector3d& pos) {
-                Eigen::Vector3d r = r_raw - pos;
-                double t = std::sqrt(eta) * r.norm();
-                return g * std::pow(std::numbers::pi, 1.5) / (2 * eta) *
-                       (helpers::vector_component(r, i) * helpers::s2(t) -
-                        2 * beta * helpers::component_difference(a, b, i) / eta * helpers::s1(t));
-            });
-        });
-    }
-
-    double integral_pp(const BasisFunction& r, const BasisFunction& s) {
-        assert(helpers::is_p_orbital(r.type) && helpers::is_p_orbital(s.type));
-        return add_primitive_integrals(r, s, [this, a = r.center, i = r.type, b = s.center, j = s.type](auto alpha, auto beta) {
-            return nuclear_loop([&, g = helpers::gaussian_product(alpha, a, beta, b),
-                                        eta = alpha + beta,
-                                        r_raw = (alpha * a + beta * b) / (alpha + beta)](const Eigen::Vector3d& pos) {
-                Eigen::Vector3d r = r_raw - pos;
-                double t = std::sqrt(eta) * r.norm();
-                double r_i = helpers::vector_component(r, i), r_j = helpers::vector_component(r, j);
-                return g * std::pow(std::numbers::pi, 1.5) / (4 * eta * eta)
-                       * (eta * r_i * r_j * helpers::s3(t)
-                          + ((i == j) + 2 * alpha * helpers::component_difference(a, b, j) * r_i -
-                             2 * beta * helpers::component_difference(a, b, i) * r_j) * helpers::s2(t)
-                          + (2 * (i == j) - 4 * alpha * beta * helpers::component_difference(a, b, i) *
-                                            helpers::component_difference(a, b, j) / eta) * helpers::s1(t));
-            });
-        });
-    }
-
-private:
-    const Molecule& mol_;
-
-    template<typename Func>
-    double nuclear_loop(Func f) {
-        double res = 0;
-        for (const auto& curr_atom: mol_.get_atoms()) {
-            res -= curr_atom.charge_ * f(curr_atom.pos_);
-        }
-        return res;
-    }
-};
+    });
+}
 
 Eigen::MatrixXd overlap(const BasisSet& basis_set) {
     return one_electron_matrix(basis_set, OverlapIntegrals());

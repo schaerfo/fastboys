@@ -19,6 +19,7 @@ endif()
 add_library(fastboys_common OBJECT src/Molecule.hpp
                                    src/Molecule.cpp
                                    src/OneElectronIntegrals.hpp
+                                   src/OneElectronIntegralDetail.hpp
                                    src/OneElectronIntegrals.cpp
                                    src/Helpers.hpp)
 
