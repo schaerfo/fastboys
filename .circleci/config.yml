@@ -40,7 +40,7 @@ jobs:
       - CXXFLAGS: -Werror --coverage
       - LDFLAGS: --coverage
     steps:
-      - run: apt-get update && apt-get install --no-install-recommends -y cmake g++-10 git googletest libboost-container-dev libboost-program-options-dev libeigen3-dev libfmt-dev ninja-build nlohmann-json3-dev
+      - run: apt-get update && apt-get install --no-install-recommends -y cmake curl g++-10 git googletest libboost-container-dev libboost-program-options-dev libeigen3-dev libfmt-dev ninja-build nlohmann-json3-dev
       - checkout
       - run: cmake . -G Ninja -DCMAKE_BUILD_TYPE=Debug
       - run: ninja -v
