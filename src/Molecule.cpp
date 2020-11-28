@@ -48,12 +48,11 @@ const std::unordered_map<std::string, unsigned> atom_charges = {{"H" , 1},
                                                                 {"Cl", 17},
                                                                 {"Ar", 18}};
 
-Atom::Atom(std::string_view symbol, Eigen::Vector3d pos):
-    symbol_(symbol),
+Atom::Atom(const std::string& symbol, Eigen::Vector3d pos):
     pos_(std::move(pos))
 {
     try {
-        charge_ = atom_charges.at(symbol_);
+        charge_ = atom_charges.at(symbol);
     } catch (std::out_of_range &) {
         throw std::runtime_error(fmt::format("Unknown element: {}", symbol));
     }

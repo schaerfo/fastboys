@@ -30,7 +30,7 @@
 
 class Atom {
 public:
-    Atom(std::string_view symbol, Eigen::Vector3d pos);
+    Atom(const std::string& symbol, Eigen::Vector3d pos);
 
     std::string symbol_;
     Eigen::Vector3d pos_;
