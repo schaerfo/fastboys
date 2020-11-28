@@ -27,19 +27,22 @@
 
 #include <boost/container/small_vector.hpp>
 #include <Eigen/Dense>
+#include <nlohmann/json.hpp>
 
 class Atom {
 public:
     Atom(const std::string& symbol, Eigen::Vector3d pos);
 
-    std::string symbol_;
     Eigen::Vector3d pos_;
     unsigned charge_;
+
+    bool operator==(const Atom& other) const;
 };
 
 struct BasisFunction {
     struct PrimitiveFunction {
         double exponent, coefficient;
+        bool operator==(const PrimitiveFunction& other) const = default;
     };
     enum class Type {
         s = 0b0, px = 0b1, py = 0b10, pz = 0b11
@@ -49,6 +52,8 @@ struct BasisFunction {
     Eigen::Vector3d center;
     PrimitiveVec primitives;
     Type type;
+
+    bool operator==(const BasisFunction& other) const = default;
 };
 
 using BasisSet = std::vector<BasisFunction>;
@@ -61,6 +66,7 @@ public:
     explicit Molecule(std::istream& xyz);
 
     BasisSet construct_basis_set(std::istream& basisset_json) const;
+    BasisSet construct_basis_set(const nlohmann::json& basisset) const;
 
     const std::vector<Atom>& get_atoms() const {
         return atoms_;
@@ -70,8 +76,13 @@ public:
         atoms_ = atoms;
     }
 
+    bool operator==(const Molecule& other) const = default;
+
 private:
     std::vector<Atom> atoms_;
 };
+
+std::ostream& operator<<(std::ostream& os, const Atom& atom);
+std::ostream& operator<<(std::ostream& os, const Molecule& molecule);
 
 #endif //MOLECULE_HPP

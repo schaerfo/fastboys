@@ -25,7 +25,6 @@
 #include <unordered_map>
 
 #include <fmt/core.h>
-#include <nlohmann/json.hpp>
 
 constexpr double ang2bohr = 1.89;
 
@@ -46,7 +45,8 @@ const std::unordered_map<std::string, unsigned> atom_charges = {{"H" , 1},
                                                                 {"P" , 15},
                                                                 {"S" , 16},
                                                                 {"Cl", 17},
-                                                                {"Ar", 18}};
+                                                                {"Ar", 18},
+                                                                {"Sc", 21}};
 
 Atom::Atom(const std::string& symbol, Eigen::Vector3d pos):
     pos_(std::move(pos))
@@ -56,6 +56,10 @@ Atom::Atom(const std::string& symbol, Eigen::Vector3d pos):
     } catch (std::out_of_range &) {
         throw std::runtime_error(fmt::format("Unknown element: {}", symbol));
     }
+}
+
+bool Atom::operator==(const Atom& other) const {
+    return other.charge_ == charge_ && other.pos_.isApprox(pos_, 1e-10);
 }
 
 Molecule::Molecule(std::istream& xyz) {
@@ -116,10 +120,25 @@ void add_basisfunctions(OutputIt out, const nlohmann::json& shells, const Eigen:
 }
 
 BasisSet Molecule::construct_basis_set(std::istream& basisset_json) const {
-    BasisSet res;
     nlohmann::json basisset;
     basisset_json >> basisset;
+    return construct_basis_set(basisset);
+}
+
+BasisSet Molecule::construct_basis_set(const nlohmann::json& basisset) const {
+    BasisSet res;
     for (const auto& curr_atom: atoms_)
         add_basisfunctions(std::back_inserter(res), basisset["elements"][std::to_string(curr_atom.charge_)]["electron_shells"], curr_atom.pos_);
     return res;
+}
+
+std::ostream& operator<<(std::ostream& os, const Atom& atom) {
+    return os << "Charge: " << atom.charge_ << " Coordinates: " << atom.pos_[0] << ' ' << atom.pos_[1] << ' ' << atom.pos_[2];
+}
+
+std::ostream& operator<<(std::ostream& os, const Molecule& m) {
+    for (auto atoms = m.get_atoms(); const auto& curr_atom: atoms) {
+        os << curr_atom << '\n';
+    }
+    return os;
 }
