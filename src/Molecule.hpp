@@ -56,6 +56,7 @@ using BasisSet = std::vector<BasisFunction>;
 class Molecule {
 public:
     Molecule() = default;
+    Molecule(std::vector<Atom> atoms): atoms_(atoms) {}
 
     explicit Molecule(std::istream& xyz);
 
