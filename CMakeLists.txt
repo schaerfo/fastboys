@@ -21,6 +21,8 @@ add_library(fastboys_common OBJECT src/Molecule.hpp
                                    src/OneElectronIntegrals.hpp
                                    src/OneElectronIntegralDetail.hpp
                                    src/OneElectronIntegrals.cpp
+                                   src/TwoElectronIntegral.hpp
+                                   src/TwoElectronIntegral.cpp
                                    src/Helpers.hpp)
 
 target_link_libraries(fastboys_common PUBLIC Boost::container Eigen3::Eigen fmt::fmt nlohmann_json::nlohmann_json)

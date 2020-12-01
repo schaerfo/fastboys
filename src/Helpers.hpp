@@ -30,6 +30,8 @@
 
 namespace helpers {
 
+constexpr auto pi_cubed = std::numbers::pi * std::numbers::pi * std::numbers::pi;
+
 inline bool is_s_orbital(BasisFunction::Type t) {
     return t == BasisFunction::Type::s;
 }
@@ -62,6 +64,14 @@ inline double s2(double t) {
 
 inline double s3(double t) {
     return std::abs(t) < 1e-3 ? 8.0 / (5 * std::sqrt(std::numbers::pi)) : (3 * std::erf(t) - 2 * (3 * t + 2 * t * t * t) * std::exp(-t * t) / std::sqrt(std::numbers::pi)) / (t * t * t * t * t);
+}
+
+inline double s4(double t) {
+    return std::abs(t) < std::pow(1e-15, 1./7.) ? -16.0 / (7 * std::sqrt(std::numbers::pi)) : (2 * std::pow(std::numbers::pi, -0.5) * (15 * t + 10 * t * t * t + 4 * t * t * t * t * t) * std::exp(-t * t) - 15 * std::erf(t)) / (t * t * t * t * t * t * t);
+}
+
+inline double s5(double t) {
+    return std::abs(t) < std::pow(1e-15, 1. / 9.) ? 32.0 / (9 * sqrt(std::numbers::pi)) : (105 * std::erf(t) - 2 * std::pow(std::numbers::pi, -0.5) * (105 * t + 70 * t * t * t + 28 * t * t * t * t * t + 8 * t * t * t * t * t * t * t) * std::exp(-t * t)) / (t * t * t * t * t * t * t * t * t);
 }
 
 }

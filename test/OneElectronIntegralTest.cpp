@@ -21,6 +21,8 @@
 
 #include <gtest/gtest.h>
 
+#include "IntegralTestData.hpp"
+
 #include "CommonTestingData.hpp"
 #include "OneElectronIntegrals.hpp"
 #include "OneElectronIntegralDetail.hpp"
@@ -128,18 +130,7 @@ TEST(OneElectronIntegralTest, potential_energy_matrix_test) {
     EXPECT_TRUE(ethene_expected.isApprox(ethene_actual, 1e-8));
 }
 
-class OneElectronIntegralDeathTest: public ::testing::Test {
-protected:
-    void SetUp() override {
-        Eigen::Vector3d pos = {0, 0, 0};
-
-        s = p = BasisFunction{pos, {}, BasisFunction::Type::s};
-        p.type = BasisFunction::Type::px;
-    }
-
-    BasisFunction s, p;
-    Molecule m;
-};
+class OneElectronIntegralDeathTest: public IntegralTestData{};
 
 TEST_F(OneElectronIntegralDeathTest, overlap_test) {
     OverlapIntegrals overlap;

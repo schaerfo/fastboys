@@ -27,6 +27,7 @@
 
 #include "Molecule.hpp"
 #include "OneElectronIntegrals.hpp"
+#include "TwoElectronIntegral.hpp"
 
 namespace po = boost::program_options;
 
@@ -63,5 +64,7 @@ int main(int argc, char** argv) {
     auto k = kinetic_energy(b);
     auto v = potential_energy(b, m);
     std::cout << s << "\n\n" << k << "\n\n" << v << '\n';
+    auto two_electron_integrals = calculate_two_electron_integrals(b);
+
     return 0;
 }
