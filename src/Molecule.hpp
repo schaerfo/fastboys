@@ -61,7 +61,7 @@ using BasisSet = std::vector<BasisFunction>;
 class Molecule {
 public:
     Molecule() = default;
-    Molecule(std::vector<Atom> atoms): atoms_(atoms) {}
+    explicit Molecule(std::vector<Atom> atoms);
 
     explicit Molecule(std::istream& xyz);
 
@@ -72,14 +72,20 @@ public:
         return atoms_;
     }
 
-    void setAtoms(const std::vector<Atom>& atoms) {
-        atoms_ = atoms;
+    unsigned int get_occupied_orbitals() const {
+        return occupied_orbitals_;
     }
+
+    double electronic_energy(const Eigen::MatrixXd& h_mo, const Eigen::MatrixXd& f_mo) const;
+    double nuclear_energy() const;
 
     bool operator==(const Molecule& other) const = default;
 
 private:
     std::vector<Atom> atoms_;
+    unsigned occupied_orbitals_;
+
+    unsigned calc_occupied_orbitals() const;
 };
 
 std::ostream& operator<<(std::ostream& os, const Atom& atom);

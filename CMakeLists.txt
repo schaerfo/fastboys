@@ -25,6 +25,8 @@ add_library(fastboys_common OBJECT src/Molecule.hpp
                                    src/TwoElectronIntegral.cpp
                                    src/FockMatrix.hpp
                                    src/FockMatrix.cpp
+                                   src/DensityMatrix.cpp
+                                   src/DensityMatrix.hpp
                                    src/Helpers.hpp)
 
 target_link_libraries(fastboys_common PUBLIC Boost::container Eigen3::Eigen fmt::fmt nlohmann_json::nlohmann_json)

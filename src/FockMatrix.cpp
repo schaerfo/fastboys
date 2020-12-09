@@ -83,3 +83,22 @@ Eigen::MatrixXd electron_repulsion_matrix(const std::vector<TwoElectronIntegral>
 
     return result;
 }
+
+Eigen::MatrixXd initial_coefficients(const Eigen::MatrixXd& overlap) {
+    Eigen::SelfAdjointEigenSolver<std::remove_reference_t<decltype(overlap)>> solver(overlap);
+    const auto& eigvals = solver.eigenvalues();
+    const auto& eigvecs = solver.eigenvectors();
+
+    Eigen::MatrixXd result(overlap.rows(), overlap.cols());
+    for (Eigen::MatrixXd::Index r=0; r<overlap.rows(); ++r){
+        for (Eigen::MatrixXd::Index i=0; i<overlap.cols(); ++i){
+            result(r, i) = eigvecs(r, i) / std::sqrt(eigvals(i));
+        }
+    }
+    return result;
+}
+
+Eigen::MatrixXd update_coefficients(const Eigen::MatrixXd& c, const Eigen::MatrixXd& f_mo) {
+    Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> solver(f_mo);
+    return c * solver.eigenvectors();
+}

@@ -62,6 +62,11 @@ bool Atom::operator==(const Atom& other) const {
     return other.charge_ == charge_ && other.pos_.isApprox(pos_, 1e-10);
 }
 
+Molecule::Molecule(std::vector<Atom> atoms)
+        : atoms_(std::move(std::move(atoms)))
+        , occupied_orbitals_(calc_occupied_orbitals())
+{}
+
 Molecule::Molecule(std::istream& xyz) {
     int atom_count;
     xyz >> atom_count;
@@ -73,8 +78,9 @@ Molecule::Molecule(std::istream& xyz) {
         double x, y, z;
         xyz >> symbol >> x >> y >> z;
         atoms_.emplace_back(symbol, ang2bohr * Eigen::Vector3d(x, y, z));
-
     }
+
+    occupied_orbitals_ = calc_occupied_orbitals();
 }
 
 double norm_s(double exponent) {
@@ -132,11 +138,36 @@ BasisSet Molecule::construct_basis_set(const nlohmann::json& basisset) const {
     return res;
 }
 
+double Molecule::electronic_energy(const Eigen::MatrixXd& h_mo, const Eigen::MatrixXd& f_mo) const{
+    double result = 0;
+    assert(h_mo.cols() == h_mo.rows() && h_mo.cols() == f_mo.rows() && h_mo.cols() == f_mo.cols());
+    for (Eigen::Index i=0; i < occupied_orbitals_; ++i) {
+        result += h_mo(i, i) + f_mo(i, i);
+    }
+    return result;
+}
+
+unsigned Molecule::calc_occupied_orbitals() const {
+    return std::accumulate(atoms_.begin(), atoms_.end(), 0,
+                           [](unsigned sum, const Atom& a){return sum + a.charge_;}) / 2;
+}
+
+double Molecule::nuclear_energy() const {
+    double result = 0;
+    for (std::size_t i=0; i<atoms_.size(); ++i) {
+        for (std::size_t j=i+1; j<atoms_.size(); ++j) {
+            result += atoms_[i].charge_ * atoms_[j].charge_ / (atoms_[i].pos_ - atoms_[j].pos_).norm();
+        }
+    }
+    return result;
+}
+
 std::ostream& operator<<(std::ostream& os, const Atom& atom) {
     return os << "Charge: " << atom.charge_ << " Coordinates: " << atom.pos_[0] << ' ' << atom.pos_[1] << ' ' << atom.pos_[2];
 }
 
 std::ostream& operator<<(std::ostream& os, const Molecule& m) {
+    os << "Number of electrons: " << m.get_occupied_orbitals() << '\n';
     for (auto atoms = m.get_atoms(); const auto& curr_atom: atoms) {
         os << curr_atom << '\n';
     }

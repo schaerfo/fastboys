@@ -19,21 +19,27 @@
  * SOFTWARE.
  */
 
-#ifndef FOCKMATRIX_HPP
-#define FOCKMATRIX_HPP
+#ifndef DENSITYMATRIX_HPP
+#define DENSITYMATRIX_HPP
 
 #include <Eigen/Dense>
 
-#include "TwoElectronIntegral.hpp"
+class DensityMatrix: public Eigen::MatrixXd {
+public:
+    DensityMatrix(unsigned n, unsigned n_occ):
+        Eigen::MatrixXd(Eigen::MatrixXd::Zero(n, n)),
+        previous_density_(Eigen::MatrixXd::Zero(n, n)),
+        n_occ_(n_occ)
+    {}
 
-Eigen::MatrixXd electron_repulsion_matrix(const std::vector<TwoElectronIntegral>& integrals, const Eigen::MatrixXd& density);
+    void updateDensity(const Eigen::MatrixXd& c);
+    double difference_norm() const;
 
-Eigen::MatrixXd initial_coefficients(const Eigen::MatrixXd& overlap);
+protected:
+    Eigen::MatrixXd previous_density_;
 
-inline Eigen::MatrixXd transform_matrix(const Eigen::MatrixXd& m, const Eigen::MatrixXd& c) {
-    return c.transpose() * m * c;
-}
+private:
+    unsigned n_occ_;
+};
 
-Eigen::MatrixXd update_coefficients(const Eigen::MatrixXd& c, const Eigen::MatrixXd& f_mo);
-
-#endif //FOCKMATRIX_HPP
+#endif //DENSITYMATRIX_HPP
