@@ -24,7 +24,7 @@
 
 #include "TwoElectronIntegral.hpp"
 
-std::vector<TwoElectronIntegral> water_ref{
+const std::vector<TwoElectronIntegral> water_ref{
         TwoElectronIntegral{0, 0, 0, 0, 4.785065752279988e+00},
         TwoElectronIntegral{1, 0, 0, 0, 7.413803209249656e-01},
         TwoElectronIntegral{1, 0, 1, 0, 1.368733673672242e-01},
@@ -433,7 +433,7 @@ std::vector<TwoElectronIntegral> water_ref{
         TwoElectronIntegral{6, 6, 6, 6, 7.746059443199189e-01}
 };
 
-std::vector<TwoElectronIntegral> ethene_ref{
+const std::vector<TwoElectronIntegral> ethene_ref{
         TwoElectronIntegral{0, 0, 0, 0, 3.541948148304560e+00},
         TwoElectronIntegral{1, 0, 0, 0, 5.769213029003581e-01},
         TwoElectronIntegral{1, 0, 1, 0, 1.118881210480334e-01},
