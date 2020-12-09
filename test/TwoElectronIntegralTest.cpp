@@ -39,10 +39,10 @@ struct IndexTupleHash {
     auto operator()(const TwoElectronIntegralIndexTuple& index_tuple) const{
         auto [mu, nu, lambda, sigma] = index_tuple;
         std::uint64_t hash_input =
-                (static_cast<uint64_t>(mu) << 48
-                | static_cast<uint64_t>(nu) << 32
-                | static_cast<uint64_t>(lambda) << 16
-                | static_cast<uint64_t>(sigma));
+                  (static_cast<uint64_t>(mu))
+                | (static_cast<uint64_t>(nu))     << 16u
+                | (static_cast<uint64_t>(lambda)) << 32u
+                | (static_cast<uint64_t>(sigma))  << 48u;
         return std::hash<uint64_t>{}(hash_input);
     }
 };
