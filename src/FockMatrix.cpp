@@ -42,10 +42,7 @@ Eigen::MatrixXd electron_repulsion_matrix(const std::vector<TwoElectronIntegral>
     auto size = density.cols();
     Eigen::MatrixXd result(size, size);
     result.setZero();
-    //for (auto [mu, nu, lambda, sigma, integral]: integrals) {
-    for (const auto& curr_integral: integrals) {
-        auto mu = curr_integral.mu, nu = curr_integral.nu, lambda = curr_integral.lambda, sigma = curr_integral.sigma;
-        double integral = curr_integral.value;
+    for (auto [mu, nu, lambda, sigma, integral]: integrals) {
         // 1.
         result(mu, nu) += get_a(mu, nu, lambda, sigma) * density(lambda, sigma) * integral;
 
