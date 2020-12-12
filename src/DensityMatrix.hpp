@@ -28,6 +28,8 @@
 
 class DensityMatrix: public Eigen::MatrixXd {
 public:
+    virtual ~DensityMatrix() = default;
+
     DensityMatrix(unsigned n, unsigned n_occ):
         Eigen::MatrixXd(Eigen::MatrixXd::Zero(n, n)),
         previous_density_(Eigen::MatrixXd::Zero(n, n)),
@@ -61,6 +63,8 @@ private:
 
 class DensityMatrixFactory {
 public:
+    virtual ~DensityMatrixFactory() = default;
+
     virtual std::unique_ptr<DensityMatrix> get_density_matrix(unsigned n, unsigned n_occ) const {
         return std::make_unique<DensityMatrix>(n, n_occ);
     }
