@@ -19,10 +19,13 @@
  * SOFTWARE.
  */
 
+#include <chrono>
 #include <fstream>
 #include <iostream>
+#include <type_traits>
 
 #include <boost/program_options.hpp>
+#include <fmt/chrono.h>
 #include <fmt/format.h>
 #include <omp.h>
 
@@ -38,6 +41,9 @@ constexpr double epsilon_e = 1e-9;
 constexpr double epsilon_p = 1e-5;
 
 int main(int argc, char** argv) {
+    using namespace std::chrono;
+    using MyClock = std::conditional_t<high_resolution_clock::is_steady, high_resolution_clock, steady_clock>;
+
     po::options_description desc("fastboys options");
     desc.add_options()
             ("input", po::value<std::string>()->required(), "xyz input file (required)")
@@ -66,10 +72,19 @@ int main(int argc, char** argv) {
         return 2;
     }
     auto b = m.construct_basis_set(basis);
+
+    auto start = MyClock::now();
     auto s = overlap(b);
     auto k = kinetic_energy(b);
     auto v = potential_energy(b, m);
+    auto end = MyClock::now();
+    fmt::print("Calculating one-electron integrals finished after {}\n", duration_cast<milliseconds>(end-start));
+
+    start = MyClock::now();
     auto two_electron_integrals = calculate_two_electron_integrals(b);
+    end = MyClock::now();
+    fmt::print("Calculating two-electron integrals finished after {}\n", duration_cast<milliseconds>(end-start));
+
     auto c = initial_coefficients(s);
     DensityMatrix p(b.size(), m.get_occupied_orbitals());
     Eigen::MatrixXd h = k + v;
@@ -79,6 +94,7 @@ int main(int argc, char** argv) {
     auto old_energy = m.electronic_energy(transform_matrix(h, c), f_mo);
 
     auto step_count = 0u;
+    start = MyClock::now();
     while (true) {
         ++step_count;
         p.updateDensity(c);
@@ -91,7 +107,8 @@ int main(int argc, char** argv) {
 
         fmt::print("ΔP = {}; ΔE = {}\n", delta_e, delta_p);
         if (delta_e < epsilon_e && delta_p < epsilon_p) {
-            fmt::print("HF converged after {} steps. Total energy: {}", step_count, energy + m.nuclear_energy());
+            end = MyClock::now();
+            fmt::print("HF converged after {} steps. Total energy: {}. Duration: {}", step_count, energy + m.nuclear_energy(), duration_cast<milliseconds>(end-start));
             break;
         }
 
