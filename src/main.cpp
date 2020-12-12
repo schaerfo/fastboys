@@ -43,6 +43,7 @@ constexpr double epsilon_p = 1e-5;
 int main(int argc, char** argv) {
     using namespace std::chrono;
     using MyClock = std::conditional_t<high_resolution_clock::is_steady, high_resolution_clock, steady_clock>;
+    using MyMillisec = duration<double, std::milli>;
 
     po::options_description desc("fastboys options");
     desc.add_options()
@@ -78,12 +79,12 @@ int main(int argc, char** argv) {
     auto k = kinetic_energy(b);
     auto v = potential_energy(b, m);
     auto end = MyClock::now();
-    fmt::print("Calculating one-electron integrals finished after {}\n", duration_cast<milliseconds>(end-start));
+    fmt::print("Calculating one-electron integrals finished after {}\n", duration_cast<MyMillisec>(end-start));
 
     start = MyClock::now();
     auto two_electron_integrals = calculate_two_electron_integrals(b);
     end = MyClock::now();
-    fmt::print("Calculating two-electron integrals finished after {}\n", duration_cast<milliseconds>(end-start));
+    fmt::print("Calculating two-electron integrals finished after {}\n", duration_cast<MyMillisec>(end-start));
 
     auto c = initial_coefficients(s);
     DensityMatrix p(b.size(), m.get_occupied_orbitals());
@@ -108,7 +109,7 @@ int main(int argc, char** argv) {
         fmt::print("ΔP = {}; ΔE = {}\n", delta_e, delta_p);
         if (delta_e < epsilon_e && delta_p < epsilon_p) {
             end = MyClock::now();
-            fmt::print("HF converged after {} steps. Total energy: {}. Duration: {}", step_count, energy + m.nuclear_energy(), duration_cast<milliseconds>(end-start));
+            fmt::print("HF converged after {} steps. Total energy: {}. Duration: {}", step_count, energy + m.nuclear_energy(), duration_cast<MyMillisec>(end-start));
             break;
         }
 
