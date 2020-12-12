@@ -37,3 +37,11 @@ void DensityMatrix::updateDensity(const Eigen::MatrixXd& c) {
 double DensityMatrix::difference_norm() const {
     return (*this - previous_density_).norm() / cols();
 }
+
+void DampingDensityMatrix::updateDensity(const Eigen::MatrixXd& c) {
+    DensityMatrix::updateDensity(c);
+    if (current_iteration < n_) {
+        ++current_iteration;
+        static_cast<Eigen::MatrixXd&>(*this) = (1 - alpha_) * *this + alpha_ * previous_density_;
+    }
+}

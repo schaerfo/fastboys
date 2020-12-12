@@ -40,6 +40,17 @@ namespace po = boost::program_options;
 constexpr double epsilon_e = 1e-9;
 constexpr double epsilon_p = 1e-5;
 
+std::unique_ptr<DensityMatrixFactory> get_density_matrix_factory(const boost::program_options::variables_map& vm) {
+    bool has_alpha = vm.count("alpha"), has_ndamp = vm.count("ndamp");
+    if (has_alpha ^ has_ndamp)
+        throw std::runtime_error("alpha and ndamp must both be specified");
+
+    if (has_alpha)
+        return std::make_unique<DampingDensityMatrixFactory>(vm["alpha"].as<double>(), vm["ndamp"].as<unsigned>());
+    else
+        return std::make_unique<DensityMatrixFactory>();
+}
+
 int main(int argc, char** argv) {
     using namespace std::chrono;
     using MyClock = std::conditional_t<high_resolution_clock::is_steady, high_resolution_clock, steady_clock>;
@@ -48,7 +59,9 @@ int main(int argc, char** argv) {
     po::options_description desc("fastboys options");
     desc.add_options()
             ("input", po::value<std::string>()->required(), "xyz input file (required)")
-            ("basisset", po::value<std::string>()->required(), "JSON basisset file (required)");
+            ("basisset", po::value<std::string>()->required(), "JSON basisset file (required)")
+            ("alpha", po::value<double>(), "damping factor")
+            ("ndamp", po::value<unsigned>(), "SCF iteration after which damping stops");
 
     po::variables_map vm;
     try {
@@ -58,6 +71,7 @@ int main(int argc, char** argv) {
         std::cerr << e.what() << "\n\n" << desc << '\n';
         return 1;
     }
+    auto p_factory = get_density_matrix_factory(vm);
 
     std::ifstream input(vm["input"].as<std::string>());
     if (!input.is_open()) {
@@ -87,7 +101,7 @@ int main(int argc, char** argv) {
     fmt::print("Calculating two-electron integrals finished after {}\n", duration_cast<MyMillisec>(end-start));
 
     auto c = initial_coefficients(s);
-    DensityMatrix p(b.size(), m.get_occupied_orbitals());
+    auto p = p_factory->get_density_matrix(b.size(), m.get_occupied_orbitals());
     Eigen::MatrixXd h = k + v;
     Eigen::MatrixXd f(b.size(), b.size());
     f.setZero();
@@ -98,13 +112,13 @@ int main(int argc, char** argv) {
     start = MyClock::now();
     while (true) {
         ++step_count;
-        p.updateDensity(c);
-        f = h + electron_repulsion_matrix(two_electron_integrals, p);
+        p->updateDensity(c);
+        f = h + electron_repulsion_matrix(two_electron_integrals, *p);
         f_mo = transform_matrix(f, c);
         auto energy = m.electronic_energy(transform_matrix(h, c), f_mo);
 
         auto delta_e = std::abs(old_energy - energy);
-        auto delta_p = p.difference_norm();
+        auto delta_p = p->difference_norm();
 
         fmt::print("ΔP = {}; ΔE = {}\n", delta_p, delta_e);
         if (delta_e < epsilon_e && delta_p < epsilon_p) {

@@ -22,6 +22,8 @@
 #ifndef DENSITYMATRIX_HPP
 #define DENSITYMATRIX_HPP
 
+#include <memory>
+
 #include <Eigen/Dense>
 
 class DensityMatrix: public Eigen::MatrixXd {
@@ -32,7 +34,7 @@ public:
         n_occ_(n_occ)
     {}
 
-    void updateDensity(const Eigen::MatrixXd& c);
+    virtual void updateDensity(const Eigen::MatrixXd& c);
     double difference_norm() const;
 
 protected:
@@ -41,5 +43,45 @@ protected:
 private:
     unsigned n_occ_;
 };
+
+class DampingDensityMatrix: public DensityMatrix {
+public:
+    DampingDensityMatrix(double alpha, unsigned n_damp, unsigned n, unsigned n_occ):
+        DensityMatrix(n, n_occ),
+        alpha_(alpha),
+        n_(n_damp)
+    {}
+
+    void updateDensity(const Eigen::MatrixXd& c) override;
+
+private:
+    double alpha_;
+    unsigned n_, current_iteration = 0;
+};
+
+class DensityMatrixFactory {
+public:
+    virtual std::unique_ptr<DensityMatrix> get_density_matrix(unsigned n, unsigned n_occ) const {
+        return std::make_unique<DensityMatrix>(n, n_occ);
+    }
+};
+
+class DampingDensityMatrixFactory: public DensityMatrixFactory {
+public:
+    DampingDensityMatrixFactory(double alpha, unsigned int n_damp):
+        alpha_(alpha),
+        n_damp_(n_damp)
+    {}
+
+    std::unique_ptr<DensityMatrix> get_density_matrix(unsigned int n, unsigned int n_occ) const override {
+        return std::make_unique<DampingDensityMatrix>(alpha_, n_damp_, n, n_occ);
+    }
+
+private:
+    double alpha_;
+    unsigned n_damp_;
+};
+
+
 
 #endif //DENSITYMATRIX_HPP
