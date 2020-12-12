@@ -217,7 +217,6 @@ double coulomb_pppp(const BasisFunction& r, const BasisFunction& s, const BasisF
 std::vector<TwoElectronIntegral> calculate_two_electron_integrals(const BasisSet& basis_set) {
     auto n = basis_set.size();
     std::vector<TwoElectronIntegral> result;
-    result.reserve((n*n*n*n + 2*n*n*n + 3*n*n + 2*n)/8);
 
     for (uint16_t mu=0; mu<n; ++mu) {
         for (uint16_t  nu=0; nu<=mu; ++nu) {
@@ -230,7 +229,7 @@ std::vector<TwoElectronIntegral> calculate_two_electron_integrals(const BasisSet
 
                     order_orbital_tuple(r, s, t, u);
 
-                    result.emplace_back(TwoElectronIntegral{mu, nu, lambda, sigma, [&r = *r, &s = *s, &t = *t, &u = *u]() {
+                    auto curr_integral = [&r = *r, &s = *s, &t = *t, &u = *u]() {
                         if (is_p_orbital(u.type))
                             return coulomb_pppp(r, s, t, u);
                         else if (is_p_orbital(t.type) && is_p_orbital(s.type))
@@ -243,11 +242,14 @@ std::vector<TwoElectronIntegral> calculate_two_electron_integrals(const BasisSet
                             return coulomb_psss(r, s, t, u);
                         else
                             return coulomb_ssss(r, s, t, u);
-                    }()});
+                    }();
+
+                    if (std::abs(curr_integral) > 1e-9)
+                        result.emplace_back(TwoElectronIntegral{mu, nu, lambda, sigma, curr_integral});
                 }
             }
         }
     }
-
+    result.shrink_to_fit();
     return result;
 }

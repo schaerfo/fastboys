@@ -70,7 +70,7 @@ void test_two_electron_integrals(const TwoElectronIntegralVector& test, const Tw
     ASSERT_EQ((n*n*n*n + 2*n*n*n + 3*n*n + 2*n)/8, reference.size());
     auto test_map = integral_map(test);
     for (auto [mu, nu, lambda, sigma, val]: reference) {
-        EXPECT_NEAR(integral_or_zero(test_map, mu, nu, lambda, sigma), val, 1e-10);
+        EXPECT_NEAR(integral_or_zero(test_map, mu, nu, lambda, sigma), val, 1e-9);
     }
 }
 
