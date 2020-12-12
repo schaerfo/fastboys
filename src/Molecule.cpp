@@ -63,6 +63,10 @@ bool Atom::operator==(const Atom& other) const {
     return other.charge_ == charge_ && other.pos_.isApprox(pos_, 1e-10);
 }
 
+bool BasisFunction::PrimitiveFunction::operator==(const PrimitiveFunction& other) const {
+    return std::abs(exponent - other.exponent) < 1e-12 && std::abs(coefficient - other.coefficient) < 1e-12;
+}
+
 Molecule::Molecule(std::vector<Atom> atoms)
         : atoms_(std::move(std::move(atoms)))
         , occupied_orbitals_(calc_occupied_orbitals())

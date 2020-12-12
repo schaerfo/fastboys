@@ -42,7 +42,7 @@ public:
 struct BasisFunction {
     struct PrimitiveFunction {
         double exponent, coefficient;
-        bool operator==(const PrimitiveFunction& other) const = default;
+        bool operator==(const PrimitiveFunction& other) const;
     };
     enum class Type {
         s = 0b0, px = 0b1, py = 0b10, pz = 0b11
