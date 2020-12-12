@@ -21,6 +21,7 @@
 
 #include "Molecule.hpp"
 
+#include <bitset>
 #include <numbers>
 #include <unordered_map>
 
@@ -170,6 +171,21 @@ std::ostream& operator<<(std::ostream& os, const Molecule& m) {
     os << "Number of electrons: " << m.get_occupied_orbitals() << '\n';
     for (auto atoms = m.get_atoms(); const auto& curr_atom: atoms) {
         os << curr_atom << '\n';
+    }
+    return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const BasisFunction& function) {
+    os << "Type: " << std::bitset<2>(static_cast<int>(function.type)) << "; Center: " << function.center.transpose() << "; Primitives: ";
+    for (auto [exp, coeff]: function.primitives) {
+        os << exp << ' ' << coeff << "; ";
+    }
+    return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const BasisSet& basis_set) {
+    for (const auto& curr_func: basis_set) {
+        os << curr_func << '\n';
     }
     return os;
 }

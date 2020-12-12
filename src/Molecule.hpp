@@ -56,7 +56,10 @@ struct BasisFunction {
     bool operator==(const BasisFunction& other) const = default;
 };
 
+std::ostream& operator<<(std::ostream& os, const BasisFunction& function);
+
 using BasisSet = std::vector<BasisFunction>;
+std::ostream& operator<<(std::ostream& os, const BasisSet& basis_set);
 
 class Molecule {
 public:
