@@ -106,7 +106,7 @@ int main(int argc, char** argv) {
         auto delta_e = std::abs(old_energy - energy);
         auto delta_p = p.difference_norm();
 
-        fmt::print("ΔP = {}; ΔE = {}\n", delta_e, delta_p);
+        fmt::print("ΔP = {}; ΔE = {}\n", delta_p, delta_e);
         if (delta_e < epsilon_e && delta_p < epsilon_p) {
             end = MyClock::now();
             fmt::print("HF converged after {} steps. Total energy: {}. Duration: {}", step_count, energy + m.nuclear_energy(), duration_cast<MyMillisec>(end-start));
