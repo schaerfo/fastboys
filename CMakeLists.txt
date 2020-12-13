@@ -33,7 +33,11 @@ add_library(fastboys_common OBJECT src/Molecule.hpp
                                    src/DensityMatrix.hpp
                                    src/Helpers.hpp)
 
-target_link_libraries(fastboys_common PUBLIC Boost::container Eigen3::Eigen fmt::fmt nlohmann_json::nlohmann_json pthread)
+target_link_libraries(fastboys_common PUBLIC Boost::container Eigen3::Eigen fmt::fmt nlohmann_json::nlohmann_json)
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    target_link_libraries(fastboys_common PUBLIC pthread)
+endif()
 
 if (OpenMP_FOUND)
     message(STATUS "Building with OpenMP")
