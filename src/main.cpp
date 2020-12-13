@@ -22,12 +22,15 @@
 #include <chrono>
 #include <fstream>
 #include <iostream>
+#include <optional>
 #include <type_traits>
 
 #include <boost/program_options.hpp>
 #include <fmt/chrono.h>
 #include <fmt/format.h>
-#include <omp.h>
+#ifdef ENABLE_OPENMP
+# include <omp.h>
+#endif
 
 #include "DensityMatrix.hpp"
 #include "FockMatrix.hpp"
@@ -60,6 +63,7 @@ int main(int argc, char** argv) {
     desc.add_options()
             ("input", po::value<std::string>()->required(), "xyz input file (required)")
             ("basisset", po::value<std::string>()->required(), "JSON basisset file (required)")
+            ("threads", po::value<unsigned>(), "Number of threads")
             ("alpha", po::value<double>(), "damping factor")
             ("ndamp", po::value<unsigned>(), "SCF iteration after which damping stops");
 
@@ -78,6 +82,18 @@ int main(int argc, char** argv) {
         std::cerr << "Could not open file: " << vm["input"].as<std::string>() << '\n';
         return 2;
     }
+
+    auto thread_count = [&vm] () -> std::optional<unsigned>{
+        if (vm.count("threads"))
+            return vm["threads"].as<unsigned >();
+        else
+            return std::nullopt;
+    }();
+
+#ifdef ENABLE_OPENMP
+    if (thread_count)
+        omp_set_num_threads(*thread_count);
+#endif
 
     Molecule m(input);
 

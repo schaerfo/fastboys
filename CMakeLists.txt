@@ -10,6 +10,10 @@ find_package(Eigen3 REQUIRED)
 find_package(fmt REQUIRED)
 find_package(nlohmann_json REQUIRED)
 
+if (NOT FASTBOYS_DISABLE_OPENMP)
+    find_package(OpenMP)
+endif ()
+
 if(MSVC)
     add_compile_options(/W3)
 else()
@@ -30,6 +34,14 @@ add_library(fastboys_common OBJECT src/Molecule.hpp
                                    src/Helpers.hpp)
 
 target_link_libraries(fastboys_common PUBLIC Boost::container Eigen3::Eigen fmt::fmt nlohmann_json::nlohmann_json)
+
+if (OpenMP_FOUND)
+    message(STATUS "Building with OpenMP")
+    target_compile_definitions(fastboys_common PUBLIC ENABLE_OPENMP)
+    target_link_libraries(fastboys_common PUBLIC OpenMP::OpenMP_CXX)
+else()
+    message(STATUS "OpenMP disabled or not found, limited multi-threading support")
+endif()
 
 add_executable(fastboys src/main.cpp)
 target_link_libraries(fastboys PRIVATE Boost::program_options fastboys_common)

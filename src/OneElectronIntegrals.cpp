@@ -57,7 +57,10 @@ Eigen::MatrixXd one_electron_matrix(const BasisSet& set, FunctionSet functions) 
     auto n = set.size();
     Eigen::MatrixXd res(n, n);
     res.setZero();
-    for(std::size_t i=0; i<n; ++i) {
+#ifdef ENABLE_OPENMP
+    #pragma omp parallel for schedule(dynamic, 1) default(none) shared(set, n, res, functions)
+#endif
+    for(Eigen::Index i = n-1; i >= 0; --i) {
         for(std::size_t j=i; j<n; ++j) {
             const auto* r = &set[i];
             const auto* s = &set[j];
