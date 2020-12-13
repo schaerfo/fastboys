@@ -24,6 +24,10 @@
 
 #include "Helpers.hpp"
 
+#ifdef ENABLE_OPENMP
+# include <omp.h>
+#endif
+
 using namespace helpers;
 
 void order_orbital_tuple(const BasisFunction*& r, const BasisFunction*& s, const BasisFunction*& t, const BasisFunction*& u) {
@@ -216,9 +220,16 @@ double coulomb_pppp(const BasisFunction& r, const BasisFunction& s, const BasisF
 
 std::vector<TwoElectronIntegral> calculate_two_electron_integrals(const BasisSet& basis_set) {
     auto n = basis_set.size();
-    std::vector<TwoElectronIntegral> result;
 
+#ifdef ENABLE_OPENMP
+    std::vector<std::vector<TwoElectronIntegral>> thread_results(n);
+    #pragma omp parallel for schedule(dynamic, 1) default(none) shared(thread_results, n, basis_set)
+    for (std::ptrdiff_t mu = n-1; mu >= 0; --mu) {
+        auto& result = thread_results[mu];
+#else
+    std::vector<TwoElectronIntegral> result;
     for (uint16_t mu=0; mu<n; ++mu) {
+#endif
         for (uint16_t  nu=0; nu<=mu; ++nu) {
             for (uint16_t  lambda=0; lambda<=mu; ++lambda) {
                 for (uint16_t  sigma=0; sigma<=(lambda == mu ? nu : lambda); ++sigma) {
@@ -245,11 +256,23 @@ std::vector<TwoElectronIntegral> calculate_two_electron_integrals(const BasisSet
                     }();
 
                     if (std::abs(curr_integral) > 1e-9)
-                        result.emplace_back(TwoElectronIntegral{mu, nu, lambda, sigma, curr_integral});
+                        result.emplace_back(TwoElectronIntegral{static_cast<uint16_t>(mu), nu, lambda, sigma, curr_integral});
                 }
             }
         }
+#ifdef ENABLE_OPENMP
+        result.shrink_to_fit();
+#endif
     }
+
+#ifdef ENABLE_OPENMP
+    std::vector<TwoElectronIntegral> result(
+            std::accumulate(thread_results.begin(), thread_results.end(), std::size_t(0),
+                            [](std::size_t sum, const auto& curr_vector){return sum + curr_vector.size();}));
+    auto it = result.begin();
+    for (const auto& curr_vector: thread_results)
+        it = std::copy(curr_vector.begin(), curr_vector.end(), it);
+#endif
     result.shrink_to_fit();
     return result;
 }
