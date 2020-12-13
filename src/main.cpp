@@ -23,6 +23,7 @@
 #include <fstream>
 #include <iostream>
 #include <optional>
+#include <thread>
 #include <type_traits>
 
 #include <boost/program_options.hpp>
@@ -129,7 +130,7 @@ int main(int argc, char** argv) {
     while (true) {
         ++step_count;
         p->updateDensity(c);
-        f = h + electron_repulsion_matrix(two_electron_integrals, *p);
+        f = h + electron_repulsion_matrix(two_electron_integrals, *p, thread_count.value_or(std::thread::hardware_concurrency()));
         f_mo = transform_matrix(f, c);
         auto energy = m.electronic_energy(transform_matrix(h, c), f_mo);
 

@@ -21,6 +21,7 @@
 
 #include "FockMatrix.hpp"
 
+#include <future>
 #include <iostream>
 
 double get_a(uint16_t i, uint16_t j, uint16_t k, uint16_t l) {
@@ -38,11 +39,12 @@ double get_b(uint16_t i, uint16_t j, uint16_t k, uint16_t l) {
     else return -0.5;
 }
 
-Eigen::MatrixXd electron_repulsion_matrix(const std::vector<TwoElectronIntegral>& integrals, const Eigen::MatrixXd& density) {
+Eigen::MatrixXd electron_repulsion_matrix_worker(std::vector<TwoElectronIntegral>::const_iterator it, std::vector<TwoElectronIntegral>::const_iterator end, const Eigen::MatrixXd& density) {
     auto size = density.cols();
     Eigen::MatrixXd result(size, size);
     result.setZero();
-    for (auto [mu, nu, lambda, sigma, integral]: integrals) {
+    for (; it < end; ++it) {
+        auto [mu, nu, lambda, sigma, integral] = *it;
         // 1.
         result(mu, nu) += get_a(mu, nu, lambda, sigma) * density(lambda, sigma) * integral;
 
@@ -75,12 +77,32 @@ Eigen::MatrixXd electron_repulsion_matrix(const std::vector<TwoElectronIntegral>
             result(lambda, sigma) += get_a(lambda, sigma, mu, nu) * density(mu, nu) * integral;
     }
 
+    return result;
+}
+
+Eigen::MatrixXd electron_repulsion_matrix(const std::vector<TwoElectronIntegral>& integrals, const Eigen::MatrixXd& density, unsigned thread_count) {
+    std::vector<std::future<Eigen::MatrixXd>> thread_results;
+    auto n = integrals.size();
+
+    for (unsigned i=0; i<thread_count; ++i) {
+        auto start = static_cast<std::size_t>(i * static_cast<double>(n) / thread_count);
+        auto end = static_cast<std::size_t>((i+1) * static_cast<double>(n) / thread_count);
+
+        thread_results.emplace_back(std::async(electron_repulsion_matrix_worker, integrals.begin() + start, integrals.begin() + end, density));
+    }
+
+    auto size = density.cols();
+    Eigen::MatrixXd result(size, size);
+    result.setZero();
+
+    for (auto& curr_result: thread_results)
+        result += curr_result.get();
+
     for (Eigen::Index i=0; i<size; ++i) {
         for (Eigen::Index j=0; j<i; ++j) {
             result(j, i) = result(i, j);
         }
     }
-
     return result;
 }
 

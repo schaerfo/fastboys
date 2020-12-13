@@ -21,6 +21,8 @@
 
 #include <gtest/gtest.h>
 
+#include <thread>
+
 #include "CommonTestingData.hpp"
 #include "TwoElectronTestData.hpp"
 #include "FockMatrix.hpp"
@@ -44,7 +46,7 @@ TEST(FockMatrixTest, water) {
                      0.683467028183,      3.03127860372,      1.90595984446,      1.46536929024,  1.10467866121e-16,      4.73429237209,      1.34017800307,
                      0.683467028183,      3.03127860372,     -1.90595984446,      1.46536929024, -1.10467866121e-16,      1.34017800307,      4.73429237209;
 
-    auto f_actual = electron_repulsion_matrix(water_ref, p);
+    auto f_actual = electron_repulsion_matrix(water_ref, p, std::thread::hardware_concurrency());
     ASSERT_EQ(f_actual.cols(), f_expected.cols());
     ASSERT_EQ(f_actual.rows(), f_expected.rows());
     EXPECT_TRUE(f_expected.isApprox(f_actual, 1e-11));
@@ -83,7 +85,7 @@ TEST(FockMatrixTest, ethene) {
                    0.0730133682798,     0.831449405592,     0.964702017017,     -0.39617707593,  -0.00177819124352,     0.786508673886,      3.50375602136,      2.89560611559,     0.912297973861,    -0.181518143013,     0.341786868436,     0.128661659976,      5.54084791896,      1.04297404785,
                    0.0730086078824,     0.831605043876,     0.388044420345,    -0.965982794693,    0.0668955798038,     0.786955637193,      3.50429643341,     -0.94305034356,     -2.87894865871,     0.275567064278,     0.126840172594,     0.351611830387,      1.04297404785,      5.54203237129;
 
-    auto f_actual = electron_repulsion_matrix(ethene_ref, p);
+    auto f_actual = electron_repulsion_matrix(ethene_ref, p, std::thread::hardware_concurrency());
     ASSERT_EQ(f_actual.cols(), f_expected.cols());
     ASSERT_EQ(f_actual.rows(), f_expected.rows());
     EXPECT_TRUE(f_expected.isApprox(f_actual, 1e-11));

@@ -26,7 +26,7 @@
 
 #include "TwoElectronIntegral.hpp"
 
-Eigen::MatrixXd electron_repulsion_matrix(const std::vector<TwoElectronIntegral>& integrals, const Eigen::MatrixXd& density);
+Eigen::MatrixXd electron_repulsion_matrix(const std::vector<TwoElectronIntegral>& integrals, const Eigen::MatrixXd& density, unsigned thread_count);
 
 Eigen::MatrixXd initial_coefficients(const Eigen::MatrixXd& overlap);
 
