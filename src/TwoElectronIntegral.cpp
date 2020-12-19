@@ -24,6 +24,8 @@
 
 #include "Helpers.hpp"
 
+#include <algorithm>
+
 #ifdef ENABLE_OPENMP
 # include <omp.h>
 #endif
@@ -266,9 +268,9 @@ std::vector<TwoElectronIntegral> calculate_two_electron_integrals(const BasisSet
     }
 
 #ifdef ENABLE_OPENMP
-    std::vector<TwoElectronIntegral> result(
-            std::accumulate(thread_results.begin(), thread_results.end(), std::size_t(0),
-                            [](std::size_t sum, const auto& curr_vector){return sum + curr_vector.size();}));
+    auto view = thread_results | std::ranges::views::transform([](const auto& vec){return vec.size();});
+
+    std::vector<TwoElectronIntegral> result(std::accumulate(view.begin(), view.end(), std::size_t(0)));
     auto it = result.begin();
     for (const auto& curr_vector: thread_results)
         it = std::copy(curr_vector.begin(), curr_vector.end(), it);
