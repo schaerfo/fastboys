@@ -23,6 +23,7 @@
 
 #include <future>
 #include <iostream>
+#include <span>
 
 double get_a(uint16_t i, uint16_t j, uint16_t k, uint16_t l) {
     if ((k == i || k == j) && l == k) return 0.5;
@@ -39,12 +40,11 @@ double get_b(uint16_t i, uint16_t j, uint16_t k, uint16_t l) {
     else return -0.5;
 }
 
-Eigen::MatrixXd electron_repulsion_matrix_worker(std::vector<TwoElectronIntegral>::const_iterator it, std::vector<TwoElectronIntegral>::const_iterator end, const Eigen::MatrixXd& density) {
+Eigen::MatrixXd electron_repulsion_matrix_worker(std::span<const TwoElectronIntegral> span, const Eigen::MatrixXd& density) {
     auto size = density.cols();
     Eigen::MatrixXd result(size, size);
     result.setZero();
-    for (; it < end; ++it) {
-        auto [mu, nu, lambda, sigma, integral] = *it;
+    for(auto [mu, nu, lambda, sigma, integral]: span) {
         // 1.
         result(mu, nu) += get_a(mu, nu, lambda, sigma) * density(lambda, sigma) * integral;
 
@@ -88,7 +88,7 @@ Eigen::MatrixXd electron_repulsion_matrix(const std::vector<TwoElectronIntegral>
         auto start = static_cast<std::size_t>(i * static_cast<double>(n) / thread_count);
         auto end = static_cast<std::size_t>((i+1) * static_cast<double>(n) / thread_count);
 
-        thread_results.emplace_back(std::async(electron_repulsion_matrix_worker, integrals.begin() + start, integrals.begin() + end, density));
+        thread_results.emplace_back(std::async(electron_repulsion_matrix_worker, std::span(integrals.begin() + start, end - start), density));
     }
 
     auto size = density.cols();
