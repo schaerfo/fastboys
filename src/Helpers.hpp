@@ -63,15 +63,15 @@ inline double s2(double t) {
 }
 
 inline double s3(double t) {
-    return std::abs(t) < 1e-3 ? 8.0 / (5 * std::sqrt(std::numbers::pi)) : (3 * std::erf(t) - 2 * (3 * t + 2 * t * t * t) * std::exp(-t * t) / std::sqrt(std::numbers::pi)) / (t * t * t * t * t);
+    return std::abs(t) < 1e-3 ? 8.0 / (5 * std::sqrt(std::numbers::pi)) : (3 * std::erf(t) - 2 * (3 * t + 2 * t * t * t) * std::exp(-t * t) / std::sqrt(std::numbers::pi)) / std::pow(t, 5);
 }
 
 inline double s4(double t) {
-    return std::abs(t) < std::pow(1e-15, 1./7.) ? -16.0 / (7 * std::sqrt(std::numbers::pi)) : (2 * std::pow(std::numbers::pi, -0.5) * (15 * t + 10 * t * t * t + 4 * t * t * t * t * t) * std::exp(-t * t) - 15 * std::erf(t)) / (t * t * t * t * t * t * t);
+    return std::abs(t) < std::pow(1e-15, 1./7.) ? -16.0 / (7 * std::sqrt(std::numbers::pi)) : (2 * std::pow(std::numbers::pi, -0.5) * (15 * t + 10 * t * t * t + 4 * std::pow(t, 5)) * std::exp(-t * t) - 15 * std::erf(t)) / std::pow(t, 7);
 }
 
 inline double s5(double t) {
-    return std::abs(t) < std::pow(1e-15, 1. / 9.) ? 32.0 / (9 * sqrt(std::numbers::pi)) : (105 * std::erf(t) - 2 * std::pow(std::numbers::pi, -0.5) * (105 * t + 70 * t * t * t + 28 * t * t * t * t * t + 8 * t * t * t * t * t * t * t) * std::exp(-t * t)) / (t * t * t * t * t * t * t * t * t);
+    return std::abs(t) < std::pow(1e-15, 1. / 9.) ? 32.0 / (9 * sqrt(std::numbers::pi)) : (105 * std::erf(t) - 2 * std::pow(std::numbers::pi, -0.5) * (105 * t + 70 * t * t * t + 28 * std::pow(t, 5) + 8 * std::pow(t, 7)) * std::exp(-t * t)) / std::pow(t, 9);
 }
 
 }

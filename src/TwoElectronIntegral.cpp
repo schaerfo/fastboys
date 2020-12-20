@@ -103,7 +103,7 @@ double prim_ppss(double alpha, double beta, double gamma, double delta, const Ei
     auto r_j = vector_component(r, j);
     auto t = q * r.norm();
     return gaussian_product(alpha, a, beta, b) * gaussian_product(gamma, c, delta, d) * q * pi_cubed/ (4 * std::pow(eta, 3.5) * std::pow(theta, 1.5)) *
-            (q * q * q * q * r_i * r_j * s3(t)
+            (std::pow(q, 4) * r_i * r_j * s3(t)
              + q * q * ((i == j) + 2 * alpha * delta_ab_j * r_i - 2 * beta * delta_ab_i * r_j) * s2(t)
              + (2 * eta * (i == j) - 4 * alpha * beta * delta_ab_i * delta_ab_j) * s1(t));
 }
@@ -126,7 +126,7 @@ double prim_psps(double alpha, double beta, double gamma, double delta, const Ei
     auto r_k = vector_component(r, k);
     auto t = q * r.norm();
     return gaussian_product(alpha, a, beta, b) * gaussian_product(gamma, c, delta, d) * q * pi_cubed/ (4 * std::pow(eta, 2.5) * std::pow(theta, 2.5)) *
-           (-q * q * q * q * r_i * r_k * s3(t)
+           (-std::pow(q, 4) * r_i * r_k * s3(t)
             + q * q * (2 * beta * delta_ab_i * r_k - 2 * delta * delta_cd_k * r_i - (i == k)) * s2(t)
             + 4 * beta * delta * delta_ab_i * delta_cd_k * s1(t));
 }
@@ -161,7 +161,7 @@ double prim_ppps(double alpha, double beta, double gamma, double delta, const Ei
 
     return alpha * delta_ab_j * prim_psps(alpha, beta, gamma, delta, a, b, c, d, i, k) / eta
            + gaussian_product(alpha, a, beta, b) * gaussian_product(gamma, c, delta, d) * q * pi_cubed/ (8 * std::pow(eta, 3.5) * std::pow(theta, 2.5)) *
-           (q * q * q * q * q * q * u4 * s4(t) + q * q * q * q * u3 * s3(t) + q * q * u2 * s2(t) + u1 * s1(t));
+           (std::pow(q, 6) * u4 * s4(t) + std::pow(q, 4) * u3 * s3(t) + q * q * u2 * s2(t) + u1 * s1(t));
 }
 
 double coulomb_ppps(const BasisFunction& r, const BasisFunction& s, const BasisFunction& t, const BasisFunction& u) {
@@ -206,9 +206,9 @@ double prim_pppp(double alpha, double beta, double gamma, double delta, const Ei
 
     return alpha * delta_ab_j * prim_ppps(gamma, delta, alpha, beta, c, d, a, b, k, l, i) / eta
            + gaussian_product(alpha, a, beta, b) * gaussian_product(gamma, c, delta, d) * q * pi_cubed/ (16 * std::pow(eta, 3.5) * std::pow(theta, 3.5)) *
-           (-q * q * q * q * q * q * q * q * u4 * r_l * s5(t)
-            + q * q * q * q * q * q * (v4 + 2 * gamma * delta_cd_l * u4 - u3 * r_l) * s4(t)
-            + q * q * q * q * (v3 + 2 * gamma * delta_cd_l * u3 - u2 * r_l) * s3(t)
+           (-std::pow(q, 8) * u4 * r_l * s5(t)
+            + std::pow(q, 6) * (v4 + 2 * gamma * delta_cd_l * u4 - u3 * r_l) * s4(t)
+            + std::pow(q, 4) * (v3 + 2 * gamma * delta_cd_l * u3 - u2 * r_l) * s3(t)
             + q * q * (v2 + 2 * gamma * delta_cd_l * u2 - u1 * r_l) * s2(t)
             + (v1 + 2 * gamma * delta_cd_l * u1) * s1(t));
 }
