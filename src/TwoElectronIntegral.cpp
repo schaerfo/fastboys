@@ -224,10 +224,10 @@ std::vector<TwoElectronIntegral> calculate_two_electron_integrals(const BasisSet
     auto n = basis_set.size();
 
 #ifdef ENABLE_OPENMP
-    std::vector<std::vector<TwoElectronIntegral>> thread_results(n);
+    std::vector<std::vector<TwoElectronIntegral>> thread_results(omp_get_max_threads());
     #pragma omp parallel for schedule(dynamic, 1) default(none) shared(thread_results, n, basis_set)
     for (std::ptrdiff_t mu = n-1; mu >= 0; --mu) {
-        auto& result = thread_results[mu];
+        auto& result = thread_results[omp_get_thread_num()];
 #else
     std::vector<TwoElectronIntegral> result;
     for (uint16_t mu=0; mu<n; ++mu) {
