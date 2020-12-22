@@ -44,15 +44,16 @@ namespace po = boost::program_options;
 constexpr double epsilon_e = 1e-9;
 constexpr double epsilon_p = 1e-5;
 
-std::unique_ptr<DensityMatrixFactory> get_density_matrix_factory(const boost::program_options::variables_map& vm) {
+std::function<std::unique_ptr<DensityMatrix>(unsigned, unsigned)>
+get_density_matrix_factory (const boost::program_options::variables_map& vm) {
     bool has_alpha = vm.count("alpha"), has_ndamp = vm.count("ndamp");
     if (has_alpha ^ has_ndamp)
         throw std::runtime_error("alpha and ndamp must both be specified");
 
     if (has_alpha)
-        return std::make_unique<DampingDensityMatrixFactory>(vm["alpha"].as<double>(), vm["ndamp"].as<unsigned>());
+        return [alpha = vm["alpha"].as<double>(), n_damp = vm["ndamp"].as<unsigned>()](unsigned n, unsigned n_occ){return std::make_unique<DampingDensityMatrix>(alpha, n_damp, n, n_occ);};
     else
-        return std::make_unique<DensityMatrixFactory>();
+        return [](unsigned n, unsigned n_occ){return std::make_unique<DensityMatrix>(n, n_occ);};
 }
 
 int main(int argc, char** argv) {
@@ -118,7 +119,7 @@ int main(int argc, char** argv) {
     fmt::print("Calculating two-electron integrals finished after {}\n", duration_cast<MyMillisec>(end-start));
 
     auto c = initial_coefficients(s);
-    auto p = p_factory->get_density_matrix(b.size(), m.get_occupied_orbitals());
+    auto p = p_factory(b.size(), m.get_occupied_orbitals());
     Eigen::MatrixXd h = k + v;
     Eigen::MatrixXd f(b.size(), b.size());
     f.setZero();

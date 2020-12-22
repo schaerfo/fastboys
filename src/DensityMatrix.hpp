@@ -61,31 +61,4 @@ private:
     unsigned n_, current_iteration = 0;
 };
 
-class DensityMatrixFactory {
-public:
-    virtual ~DensityMatrixFactory() = default;
-
-    virtual std::unique_ptr<DensityMatrix> get_density_matrix(unsigned n, unsigned n_occ) const {
-        return std::make_unique<DensityMatrix>(n, n_occ);
-    }
-};
-
-class DampingDensityMatrixFactory: public DensityMatrixFactory {
-public:
-    DampingDensityMatrixFactory(double alpha, unsigned int n_damp):
-        alpha_(alpha),
-        n_damp_(n_damp)
-    {}
-
-    std::unique_ptr<DensityMatrix> get_density_matrix(unsigned int n, unsigned int n_occ) const override {
-        return std::make_unique<DampingDensityMatrix>(alpha_, n_damp_, n, n_occ);
-    }
-
-private:
-    double alpha_;
-    unsigned n_damp_;
-};
-
-
-
 #endif //DENSITYMATRIX_HPP
