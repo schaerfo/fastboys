@@ -106,6 +106,8 @@ int main(int argc, char** argv) {
     }
     auto b = m.construct_basis_set(basis);
 
+    fmt::print("Number of basis functions: {}\n", b.size());
+
     auto start = MyClock::now();
     auto s = overlap(b);
     auto k = kinetic_energy(b);
