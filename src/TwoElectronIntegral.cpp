@@ -268,9 +268,11 @@ std::vector<TwoElectronIntegral> calculate_two_electron_integrals(const BasisSet
     }
 
 #ifdef ENABLE_OPENMP
-    auto view = thread_results | std::ranges::views::transform([](const auto& vec){return vec.size();});
-
-    std::vector<TwoElectronIntegral> result(std::accumulate(view.begin(), view.end(), std::size_t(0)));
+    std::vector<TwoElectronIntegral> result(std::transform_reduce(thread_results.begin(),
+                                                                     thread_results.end(),
+                                                                     std::size_t(0),
+                                                                     std::plus<>(),
+                                                                     [](const auto& vec){return vec.size();}));
     auto it = result.begin();
     for (const auto& curr_vector: thread_results)
         it = std::copy(curr_vector.begin(), curr_vector.end(), it);
